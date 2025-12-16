@@ -1,0 +1,20 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        maven{ url("https://repo.gradle.org/gradle/libs-releases/") }
+        maven { url 'https://www.jitpack.io' }
+        maven { url "https://maven.google.com" }
+        maven {url = uri("https://plugins.gradle.org/m2/")}
+    }
+}
+include ':app'
+rootProject.name = "Chat"

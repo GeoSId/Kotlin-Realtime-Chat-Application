@@ -1,0 +1,225 @@
+package com.lkps.ctApp.utils
+
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.databinding.BindingAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import com.google.firebase.Timestamp
+import com.lkps.ct.R
+import com.lkps.ctApp.data.model.Chat
+import com.lkps.ctApp.data.model.Message
+import com.lkps.ctApp.data.model.User
+import com.lkps.ctApp.utils.Constant.ONE_MESSAGE
+import com.lkps.ctApp.utils.extension.saveTo
+import com.lkps.ctApp.utils.extension.toDp
+import com.lkps.ctApp.view.adapters.MsgAdapter
+import com.lkps.ctApp.view.adapters.ChatListAdapter
+import com.lkps.ctApp.view.adapters.SearchAdapter
+import com.lkps.ctApp.view.adapters.UsersAdapter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
+
+@BindingAdapter("msgList")
+fun bindMsgRecyclerView(recyclerView: RecyclerView, data: List<Message>?) {
+    val adapter = recyclerView.adapter as MsgAdapter
+    adapter.submitList(data) { recyclerView.layoutManager?.scrollToPosition(adapter.itemCount - 1) }
+    adapter.notifyDataSetChanged()
+}
+
+@BindingAdapter("userSearchList")
+fun bindUserSearchRecyclerView(recyclerView: RecyclerView, data: List<User>?) {
+    val adapter = recyclerView.adapter as SearchAdapter
+    adapter.submitList(data)
+    adapter.notifyDataSetChanged()
+}
+
+@BindingAdapter("userMangerList")
+fun bindUserUserManagerRecyclerView(recyclerView: RecyclerView, data: List<User>?) {
+    if(data != null && data.isNotEmpty()) {
+        val adapter = recyclerView.adapter as UsersAdapter
+        adapter.submitList(data)
+        adapter.notifyDataSetChanged()
+    }
+}
+
+@BindingAdapter("userChatList")
+fun bindUserChatRecyclerView(recyclerView: RecyclerView, data: List<Chat>?) {
+    val adapter = recyclerView.adapter as ChatListAdapter
+    adapter.submitList(data)
+    adapter.notifyDataSetChanged()
+}
+
+@BindingAdapter("imageUrl")
+fun bindImage(imgView: ImageView, imgUrl: String?) {
+
+    if (imgUrl.isNullOrEmpty()) {
+        imgView.visibility = View.GONE
+        return
+    } else imgView.visibility = View.VISIBLE
+
+    if (imgUrl == "loading") {
+        imgView.setImageResource(R.drawable.loading_animation)
+        return
+    }
+
+    Glide.with(imgView.context)
+        .load(imgUrl)
+        .apply(
+                RequestOptions()
+                        .placeholder(R.drawable.loading_animation)
+                        .error(R.drawable.ic_broken_image)
+        )
+        .into(imgView)
+}
+
+@BindingAdapter("profileImgUrl")
+fun bindProfileImg(imgView: ImageView, imgUrl: String?) {
+
+    if (imgUrl.isNullOrEmpty()) {
+        imgView.setImageResource(R.drawable.ic_account_circle_black_24dp)
+        return
+    }
+
+    Glide.with(imgView.context)
+        .load(imgUrl)
+        .apply(
+                RequestOptions()
+                        .placeholder(R.drawable.loading_animation)
+                        .error(R.drawable.ic_account_circle_black_24dp)
+                        .circleCrop()
+        )
+        .into(imgView)
+}
+
+@BindingAdapter("hourTime")
+fun bindingTextHourTime(textView: TextView, timestamp: Any?) {
+    if (timestamp is Timestamp) {
+        val df = SimpleDateFormat("HH:mm", Locale.getDefault())
+        textView.text = df.format(timestamp.toDate())
+    }
+}
+
+@BindingAdapter("textOrGoneName", "groupChat")
+fun bindingTextOrGoneUsername(textView: TextView, text: String?, isGroupChat: Boolean?) {
+    val groupChat = isGroupChat ?: false
+
+    if (text == null || groupChat.not()) {
+        textView.visibility = View.GONE
+    } else {
+        textView.visibility = View.VISIBLE
+        textView.text = text
+    }
+}
+
+@BindingAdapter("textOrGone")
+fun bindingTextOrGone(textView: TextView, text: String?) {
+    if (text == null) {
+        textView.isVisible = false
+    } else {
+        textView.isVisible = true
+        textView.text = text
+    }
+}
+
+@BindingAdapter("lastMsg")
+fun bindingLastMsg(textView: TextView, message: Message?) {
+    if (message == null) return
+    message.audioUrl?.let { textView.text = "\uD83C\uDFA4 Record" }
+    if(message.fileExtension.equals("jpg")){
+        textView.text = "\uD83D\uDCF7 Photo"
+    }else if(message.fileExtension.equals("pdf")){
+        textView.text =  "\uD83D\uDCC1 File"
+    }
+    message.text?.let { textView.text = it }
+}
+
+@BindingAdapter("newMsg")
+fun bindingNewMsg(textView: TextView, chat: Chat?) {
+    if (chat == null) return
+    val message: Message = chat.message?.value ?: return
+    val user: User = chat.user?.value ?: return
+    if((message.readTimestamp == null) && (user.username.equals(message.name))){
+        textView.text = ONE_MESSAGE
+        textView.isVisible = true
+    }else{
+        textView.isVisible = false
+    }
+}
+
+@BindingAdapter("goneIfNull")
+fun bindingGoneIfNull(view: View, text: String?) {
+    view.visibility = if (text == null) View.GONE else View.VISIBLE
+}
+
+@BindingAdapter("goneIfNotNull")
+fun bindingGoneIfNotNull(view: View, text: String?) {
+    view.visibility = if (text == null) View.VISIBLE else View.GONE
+}
+
+@BindingAdapter("audioTime")
+fun bindingAudioTime(textView: TextView, audioFile: Long?) {
+    audioFile?.let { Utility.setAudioTimeMmSs(textView, audioFile) }
+}
+
+@BindingAdapter("fakeAudioProgress")
+fun bindingFakeAudioProgress(view: View, msg: Message?) {
+    if (msg == null) return
+    CoroutineScope(Dispatchers.Main).launch {
+        try {
+            view.visibility = View.VISIBLE
+            getAudio(msg)
+            msg.audioDownloaded = true
+            view.visibility = View.GONE
+        } catch (e: Exception) {
+            view.visibility = View.GONE
+        }
+    }
+}
+
+@BindingAdapter("onlineTint")
+fun bindingOnlineTint(view: ImageView, isOnline: Boolean?) {
+    isOnline?.let {
+        view.setColorFilter(
+                if (isOnline) ContextCompat.getColor(view.context, R.color.onlineOn)
+                else ContextCompat.getColor(view.context, R.color.onlineOff)
+        )
+    }
+}
+
+@BindingAdapter("readIconTint")
+fun bindingReadIconTint(view: ImageView, timestamp: Any?) {
+    view.setColorFilter(
+            if (timestamp != null) ContextCompat.getColor(view.context, R.color.readOn)
+            else ContextCompat.getColor(view.context, R.color.readOff)
+    )
+}
+
+/**
+ * When @RecyclerView is in parent layout_height="wrap_content" it blinks on data change.
+ * Setting layout_height programmatically prevent blinking onDataChange.
+ */
+@BindingAdapter("preventSearchBlinking")
+fun bindPreventSearchBlinking(linearLayout: LinearLayout, data: List<User>?) {
+    data?.let {
+//        val parentHeight = (linearLayout.parent as LinearLayout).height
+//        val customHeight = it.size * 74.toDp() + 16.toDp()
+//        val newHeight = if (customHeight > parentHeight) parentHeight else customHeight
+//        linearLayout.layoutParams.height = if (it.isEmpty()) 90.toDp() else newHeight
+    }
+}
+
+suspend fun getAudio(msg: Message) {
+    withContext(Dispatchers.IO) { msg.audioFile?.let { msg.audioUrl?.saveTo(it) } }
+}

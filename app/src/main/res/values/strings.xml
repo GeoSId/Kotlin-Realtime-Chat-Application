@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">KMPL</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="manager">Manager</string>
+    <string name="delete_conversation">Delete Chat</string>
+    <string name="send_button_label">Send</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="change_username">Change username</string>
+    <string name="enter_username">Enter username</string>
+    <string name="next">Next</string>
+    <string name="search">Search</string>
+    <string name="username">Username</string>
+    <string name="usernameError">This username is not available.</string>
+    <string name="usernameHint">Use 4 or more characters.</string>
+    <string name="usernameInfo">Pick username for your account.</string>
+    <string name="no_results">No results</string>
+    <string name="change_a_bit_your_query">Change a bit your query</string>
+    <string name="type_a_message">Type a message</string>
+    <string name="record_failed">You can\'t record a voice message while you\'re recording in another app</string>
+    <string name="clear_chat">Clear Chat</string>
+
+    <string name="delete_users">DELETE USERS</string>
+    <string name="delete_chat">DELETE CHAT ROOMS</string>
+    <string name="delete_user_names">DELETE USER NAMES</string>
+    <string name="delete_user_">DELETE USER: </string>
+
+    <string name="update_message">There is a new version \nPlease update your app.</string>
+    <string name="update">Update</string>
+    <string name="ok">OK</string>
+
+</resources>

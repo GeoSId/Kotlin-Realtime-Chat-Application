@@ -1,0 +1,162 @@
+ext.deps = [:]
+def versions = [:]
+versions.android_gradle_plugin = '8.8.0'
+versions.android_preference = '1.2.1'
+versions.annotation = '1.9.1'
+versions.apache_commons = "2.5"
+versions.appcompat = '1.7.0'
+versions.constraint_layout = '2.2.0'
+versions.commons_text = "1.8"
+versions.components = "1.0.0"
+versions.core_ktx = '1.15.0'
+versions.dexmaker = "2.2.0"
+versions.espresso = "3.2.0"
+versions.facebook = '13.1.0'
+versions.firebase_anal = '22.2.0'
+versions.firebase_core = '21.1.1'
+versions.firebase_database = '21.0.0'
+versions.firebase_msg = '24.1.0'
+versions.glide_transformations = "4.0.0"
+versions.glide = '4.16.0'
+versions.google_auth = '20.2.0'
+versions.google_services= '4.4.1'
+versions.google_maps= '18.0.2'
+versions.google_location= '19.0.1'
+versions.playcore= '1.10.3'
+versions.google_places = '2.6.0'
+versions.gson = '2.8.6'
+versions.junit = "4.12"
+versions.dagger = '2.55'
+versions.kotlin = '2.1.10'
+versions.kotlin_coroutines = '1.10.1'
+versions.lifecycle = '2.2.0'
+versions.lifecyclektx = '2.4.1'
+versions.runtimktx = '2.5.0-alpha06'
+versions.viewmodelktx = '2.5.0-alpha06'
+versions.material = '1.12.0'
+versions.navigation = '2.8.6'
+versions.okhttp_logging_interceptor = '5.0.0-alpha.7'
+versions.okio = '3.1.0'
+versions.recycler = '1.4.0'
+versions.retrofit = '2.11.0'
+versions.rootBeer = '0.1.0'
+versions.room = '2.2.3'
+versions.rx_android = '2.1.1'
+versions.rx_binding = "2.2.0"
+versions.rx_binding_kotlin = "2.2.0"
+versions.rx_permissions = "0.9.4"
+versions.rxjava2 = '2.2.21'
+versions.stetho = '1.6.0'
+versions.support = '1.1.0'
+versions.swipe = '1.1.0'
+versions.timber = '5.0.1'
+versions.twitter = "3.1.1"
+versions.viewmodel = "2.0.1"
+ext.versions = versions
+
+def deps = [:]
+deps.preference_ktx = "androidx.preference:preference-ktx:$versions.android_preference"
+
+deps.google_services = "com.google.gms:google-services:$versions.google_services"
+deps.android_gradle_plugin = "com.android.tools.build:gradle:$versions.android_gradle_plugin"
+deps.timber = "com.jakewharton.timber:timber:$versions.timber"
+deps.okhttp_logging_interceptor = "com.squareup.okhttp3:logging-interceptor:${versions.okhttp_logging_interceptor}"
+deps.okio = "com.squareup.okio:okio:$versions.okio"
+deps.rootBeer = "com.scottyab:rootbeer-lib:$versions.rootBeer"
+
+def kotlin = [:]
+kotlin.stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$versions.kotlin"
+kotlin.test = "org.jetbrains.kotlin:kotlin-test-junit:$versions.kotlin"
+kotlin.plugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.0"
+kotlin.allopen = "org.jetbrains.kotlin:kotlin-allopen:$versions.kotlin"
+kotlin.coroutines_core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$versions.kotlin_coroutines"
+kotlin.coroutines_android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$versions.kotlin_coroutines"
+deps.kotlin = kotlin
+
+def dagger = [:]
+dagger.runtime = "com.google.dagger:dagger:$versions.dagger"
+dagger.android = "com.google.dagger:dagger-android:$versions.dagger"
+dagger.android_support = "com.google.dagger:dagger-android-support:$versions.dagger"
+dagger.compiler = "com.google.dagger:dagger-compiler:$versions.dagger"
+dagger.android_support_compiler = "com.google.dagger:dagger-android-processor:$versions.dagger"
+deps.dagger = dagger
+
+def support = [:]
+support.annotations = "androidx.annotation:annotation:$versions.annotation"
+support.app_compat = "androidx.appcompat:appcompat:$versions.appcompat"
+support.cardview = "androidx.cardview:cardview:$versions.support"
+support.core_utils = "androidx.legacy:legacy-support-core-utils:$versions.support"
+support.core_ktx = "androidx.core:core-ktx:$versions.core_ktx"
+support.material = "com.google.android.material:material:$versions.material"
+support.swipe = "androidx.swiperefreshlayout:swiperefreshlayout:$versions.swipe"
+support.dynamic_animation = "androidx.dynamicanimation:dynamicanimation:$versions.support"
+support.fragment_runtime = "androidx.fragment:fragment:${versions.fragment}"
+support.fragment_runtime_ktx = "androidx.fragment:fragment-ktx:${versions.fragment}"
+support.fragment_testing = "androidx.fragment:fragment-testing:${versions.fragment}"
+support.recyclerview = "androidx.recyclerview:recyclerview:$versions.recycler"
+support.viewpager = "androidx.viewpager2:viewpager2:$versions.support"
+deps.support = support
+
+def firebase = [:]
+firebase.core = "com.google.firebase:firebase-core:$versions.firebase_core"
+firebase.messaging = "com.google.firebase:firebase-messaging:$versions.firebase_msg"
+firebase.analytics = "com.google.firebase:firebase-analytics:$versions.firebase_anal"
+firebase.database = "com.google.firebase:firebase-database:$versions.firebase_database"
+deps.firebase = firebase
+
+deps.constraint_layout = "androidx.constraintlayout:constraintlayout:$versions.constraint_layout"
+deps.navigation = "androidx.navigation:navigation-ui:$versions.navigation"
+
+def facebook = [:]
+facebook.stetho = "com.facebook.stetho:stetho:$versions.stetho"
+facebook.stetho_okhttp3 = "com.facebook.stetho:stetho-okhttp3:$versions.stetho"
+deps.facebook = facebook
+
+def twitter = [:]
+twitter.core = "com.twitter.sdk.android:twitter-core:$versions.twitter"
+twitter.ui = "com.twitter.sdk.android:tweet-ui:$versions.twitter"
+deps.twitter = twitter
+
+def retrofit = [:]
+retrofit.runtime = "com.squareup.retrofit2:retrofit:$versions.retrofit"
+retrofit.adapter_rx_java2 = "com.squareup.retrofit2:adapter-rxjava2:$versions.retrofit"
+retrofit.gson_converter = "com.squareup.retrofit2:converter-gson:$versions.retrofit"
+deps.gson = "com.google.code.gson:gson:$versions.gson"
+deps.retrofit = retrofit
+
+def lifecycle = [:]
+lifecycle.runtime_ktx = "androidx.lifecycle:lifecycle-runtime-ktx:$versions.runtimktx"
+lifecycle.java8 = "androidx.lifecycle:lifecycle-common-java8:$versions.lifecycle"
+lifecycle.compiler = "androidx.lifecycle:lifecycle-compiler:$versions.lifecycle"
+lifecycle.extensions= "androidx.lifecycle:lifecycle-extensions:$versions.lifecycle"
+lifecycle.viewmodel_ktx = "androidx.lifecycle:lifecycle-viewmodel-ktx:$versions.viewmodelktx"
+lifecycle.livedata_ktx = "androidx.lifecycle:lifecycle-livedata-ktx:$versions.lifecyclektx"
+deps.lifecycle = lifecycle
+
+def glide = [:]
+glide.runtime = "com.github.bumptech.glide:glide:$versions.glide@aar"
+glide.compiler = "com.github.bumptech.glide:compiler:$versions.glide"
+deps.glide = glide
+
+def google = [:]
+google.auth = "com.google.android.gms:play-services-auth:$versions.google_auth"
+google.places = "com.google.android.libraries.places:places:$versions.google_places"
+google.maps = "com.google.android.gms:play-services-maps:$versions.google_maps"
+google.location = "com.google.android.gms:play-services-location:$versions.google_location"
+google.playcore = "com.google.android.play:core:$versions.playcore"
+deps.google = google
+
+def rx_java2 = [:]
+rx_java2.rx_permissions = "com.tbruyelle.rxpermissions2:rxpermissions:$versions.rx_permissions"
+rx_java2.rx_binding = "com.jakewharton.rxbinding2:rxbinding:$versions.rx_binding"
+rx_java2.rx_binding_kotlin = "com.jakewharton.rxbinding2:rxbinding-kotlin:$versions.rx_binding_kotlin"
+rx_java2.rxjava2 = "io.reactivex.rxjava2:rxjava:$versions.rxjava2"
+rx_java2.rx_android = "io.reactivex.rxjava2:rxandroid:$versions.rx_android"
+deps.rx_java2 = rx_java2
+
+ext.deps = deps
+
+def build_versions = [:]
+build_versions.min_sdk = 28
+build_versions.target_sdk = 35
+ext.build_versions = build_versions

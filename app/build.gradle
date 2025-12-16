@@ -1,0 +1,170 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'kotlin-parcelize'
+    id 'org.jetbrains.kotlin.android'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
+}
+
+if (file("signconfigs.gradle").exists()) {
+    apply from: "signconfigs.gradle"
+}
+
+android {
+    namespace 'com.lkps.ct'
+
+    compileSdkVersion build_versions.target_sdk
+
+    defaultConfig {
+        applicationId "com.lkps.ct"
+        minSdkVersion 28
+        targetSdkVersion  build_versions.target_sdk
+        versionCode 11
+        versionName "1.0.0"
+        multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file("gradle.properties").newDataInputStream())
+
+    buildTypes {
+        debug {
+            shrinkResources false
+            minifyEnabled true
+            signingConfig signingConfigs.debug
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "PUSH_API_K", "\"${properties.getProperty("PUSH_API_KEY")}\""
+        }
+        release {
+            shrinkResources false
+            minifyEnabled true
+            signingConfig signingConfigs.release
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "PUSH_API_K", "\"${properties.getProperty("PUSH_API_KEY")}\""
+        }
+    }
+
+    sourceSets {
+        String sharedTestDir = 'src/sharedTest/java'
+        String debugDir = 'src/debug/java'
+        main.java.srcDirs += debugDir
+        test.java.srcDirs += sharedTestDir
+        androidTest.java.srcDirs += sharedTestDir
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        dataBinding true
+        viewBinding true
+        buildConfig true
+    }
+
+    kotlinOptions.jvmTarget = "1.8"
+    testOptions {
+        animationsDisabled = true
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
+    implementation deps.kotlin.stdlib
+    implementation 'androidx.fragment:fragment-ktx:1.8.5'
+
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:2.1.10')
+
+    /*Sub -> ------------------ AndroidX Dependencies ------------------*/
+    api deps.support.annotations
+    api deps.support.app_compat
+    api "androidx.cardview:cardview:$cardviewVersion"
+    api deps.support.core_ktx
+    api deps.support.material
+    api deps.support.swipe
+    api deps.support.viewpager
+    api deps.support.recyclerview
+    api deps.navigation
+    api deps.constraint_layout
+
+    //Firebase
+    implementation platform('com.google.firebase:firebase-bom:33.8.0')
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.firebaseui:firebase-ui-auth:8.0.2'
+    implementation 'com.google.firebase:firebase-config-ktx'
+    implementation 'com.google.firebase:firebase-firestore:25.1.1'
+    implementation 'com.google.firebase:firebase-storage-ktx:21.0.1'
+    implementation 'com.google.guava:guava:33.4.0-jre'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+
+    /*Sub -> ------------------ Firebase ------------------*/
+    implementation deps.firebase.analytics
+    implementation deps.firebase.core
+    implementation deps.firebase.messaging
+    implementation deps.firebase.database
+
+    /*Sub -> ------------------ Glide Dependencies ------------------*/
+    api(deps.glide.runtime) { transitive = true }
+    kapt deps.glide.compiler
+    annotationProcessor deps.glide.compiler
+
+    /*Sub -> ------------------ Retrofit2 Dependencies ------------------*/
+    api deps.retrofit.runtime
+    api deps.retrofit.adapter_rx_java2
+    api deps.retrofit.gson_converter
+
+    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.14'
+
+    //Nav
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.8.6'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.8.6'
+
+    /*Sub -> ------------------ Kotlin Dependencies ------------------*/
+    api deps.kotlin.stdlib
+    api deps.kotlin.coroutines_core
+    api deps.kotlin.coroutines_android
+    implementation "io.insert-koin:koin-android:3.5.6"
+    implementation "io.insert-koin:koin-android-compat:3.5.6"
+
+
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1"
+//    api deps.kotlin.core_ext
+    api deps.preference_ktx
+
+    //Lifecycle
+    implementation "androidx.lifecycle:lifecycle-extensions:$versions.lifecycle"
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.8.7'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.7'
+
+    //Coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.1'
+
+    /*Sub -> ------------------ Dagger Dependencies ------------------*/
+    api deps.dagger.runtime
+    kapt deps.dagger.compiler
+
+    implementation 'com.google.dagger:dagger:2.55'
+    implementation 'com.google.dagger:dagger-android:2.55'
+    implementation 'com.google.dagger:dagger-android-support:2.55'
+    kapt 'com.google.dagger:dagger-android-processor:2.55'
+
+    //Moshi
+    implementation 'com.squareup.moshi:moshi-kotlin:1.15.2'
+    implementation 'com.squareup.moshi:moshi:1.15.2'
+
+    // WorkManager with Coroutines
+    implementation 'androidx.work:work-runtime-ktx:2.10.0'
+    implementation 'androidx.work:work-rxjava2:2.10.0'
+}

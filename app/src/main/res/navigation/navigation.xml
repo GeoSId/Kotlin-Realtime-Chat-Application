@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/navigation"
+    app:startDestination="@id/fragment_start">
+
+    <fragment
+        android:id="@+id/fragment_start"
+        android:name="com.lkps.ctApp.view.chatRooms.StartFragment"
+        android:label="StartFragment">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="atr:fragment_start" />
+        <action
+            android:id="@+id/action_fragment_start_to_fragment_manager"
+            app:destination="@id/fragment_manager" />
+        <action
+            android:id="@+id/action_fragment_start_to_fragment_search"
+            app:destination="@id/fragment_search" />
+        <action
+            android:id="@+id/action_fragment_start_to_fragment_chat"
+            app:destination="@id/fragment_chat" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_username"
+        android:name="com.lkps.ctApp.view.userProfile.UsernameFragment"
+        android:label="UsernameFragment">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="atr:fragment_username" />
+        <action
+            android:id="@+id/action_fragment_username_to_fragment_start"
+            app:destination="@id/fragment_start" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_chat"
+        android:name="com.lkps.ctApp.view.chatRoom.ChatFragment"
+        android:label="ChatFragment">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="atr:fragment_chat" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_manager"
+        android:name="com.lkps.ctApp.view.ManagerFragment"
+        android:label="ManagerFragment">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="atr:fragment_manager" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_search"
+        android:name="com.lkps.ctApp.view.searchUser.SearchFragment"
+        android:label="SearchFragment">
+        <deepLink
+            android:id="@+id/deepLink"
+            app:uri="atr:fragment_search" />
+
+    </fragment>
+
+</navigation>
