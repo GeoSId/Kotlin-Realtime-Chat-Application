@@ -1,11 +1,11 @@
 plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.kapt)
     id 'kotlin-parcelize'
-    id 'org.jetbrains.kotlin.android'
-    id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.navigation.safeargs)
 }
 
 if (file("signconfigs.gradle").exists()) {
@@ -14,13 +14,12 @@ if (file("signconfigs.gradle").exists()) {
 
 android {
     namespace 'com.lkps.ct'
-
-    compileSdkVersion build_versions.target_sdk
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.lkps.ct"
-        minSdkVersion 28
-        targetSdkVersion  build_versions.target_sdk
+        minSdk 28
+        targetSdk 36
         versionCode 11
         versionName "1.0.0"
         multiDexEnabled true
@@ -57,8 +56,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -67,7 +66,10 @@ android {
         buildConfig true
     }
 
-    kotlinOptions.jvmTarget = "1.8"
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
     testOptions {
         animationsDisabled = true
         unitTests.returnDefaultValues = true
@@ -75,95 +77,84 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.7.0'
-    implementation deps.kotlin.stdlib
-    implementation 'androidx.fragment:fragment-ktx:1.8.9'
+    // Testing
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
 
-    implementation platform('org.jetbrains.kotlin:kotlin-bom:2.1.10')
+    // Kotlin
+    implementation platform(libs.kotlin.bom)
+    implementation libs.kotlin.stdlib
+    implementation libs.kotlinx.coroutines.core
+    implementation libs.kotlinx.coroutines.android
+    implementation libs.kotlinx.coroutines.play.services
 
-    /*Sub -> ------------------ AndroidX Dependencies ------------------*/
-    api deps.support.annotations
-    api deps.support.app_compat
-    api "androidx.cardview:cardview:$cardviewVersion"
-    api deps.support.core_ktx
-    api deps.support.material
-    api deps.support.swipe
-    api deps.support.viewpager
-    api deps.support.recyclerview
-    api deps.navigation
-    api deps.constraint_layout
+    // AndroidX Core
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.material
+    implementation libs.androidx.constraintlayout
+    implementation libs.androidx.recyclerview
+    implementation libs.androidx.cardview
+    implementation libs.androidx.swiperefreshlayout
+    implementation libs.androidx.viewpager2
+    implementation libs.androidx.annotation
+    implementation libs.androidx.preference.ktx
+    implementation libs.androidx.fragment.ktx
 
-    //Firebase
-    implementation platform('com.google.firebase:firebase-bom:34.7.0')
-    implementation 'com.google.firebase:firebase-auth'
-    implementation 'com.firebaseui:firebase-ui-auth:9.1.1'
-    implementation 'com.google.firebase:firebase-config'
-    implementation 'com.google.firebase:firebase-firestore:26.0.2'
-    implementation 'com.google.firebase:firebase-storage-ktx:21.0.2'
-    implementation 'com.google.guava:guava:33.5.0-jre'
-    implementation 'com.google.firebase:firebase-crashlytics'
-    implementation 'com.google.firebase:firebase-analytics'
+    // Navigation
+    implementation libs.androidx.navigation.fragment.ktx
+    implementation libs.androidx.navigation.ui.ktx
 
-    /*Sub -> ------------------ Firebase ------------------*/
-    implementation deps.firebase.core
-    implementation deps.firebase.messaging
-    implementation deps.firebase.database
+    // Lifecycle
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.lifecycle.viewmodel.ktx
+    implementation libs.androidx.lifecycle.livedata.ktx
 
-    /*Sub -> ------------------ Glide Dependencies ------------------*/
-    api(deps.glide.runtime) { transitive = true }
-    kapt deps.glide.compiler
-    annotationProcessor deps.glide.compiler
+    // Firebase (using BOM for version management)
+    implementation platform(libs.firebase.bom)
+    implementation libs.firebase.auth
+    implementation libs.firebase.config
+    implementation libs.firebase.firestore
+    implementation libs.firebase.storage
+    implementation libs.firebase.crashlytics
+    implementation libs.firebase.analytics
+    implementation libs.firebase.messaging
+    implementation libs.firebase.database
+    implementation libs.firebase.ui.auth
+    implementation libs.guava
 
-    /*Sub -> ------------------ Retrofit2 Dependencies ------------------*/
-    api deps.retrofit.runtime
-    api deps.retrofit.adapter_rx_java2
-    api deps.retrofit.gson_converter
+    // Networking - Retrofit & OkHttp
+    implementation libs.retrofit
+    implementation libs.retrofit.adapter.rxjava2
+    implementation libs.retrofit.converter.gson
+    implementation libs.okhttp
+    implementation libs.okhttp.logging.interceptor
+    implementation libs.gson
 
-    implementation 'com.squareup.okhttp3:okhttp:5.3.2'
+    // Moshi
+    implementation libs.moshi
+    implementation libs.moshi.kotlin
 
-    //Nav
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.9.6'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.9.6'
+    // Image Loading - Glide
+    implementation libs.glide
+    kapt libs.glide.compiler
 
-    /*Sub -> ------------------ Kotlin Dependencies ------------------*/
-    api deps.kotlin.stdlib
-    api deps.kotlin.coroutines_core
-    api deps.kotlin.coroutines_android
-    implementation "io.insert-koin:koin-android:4.1.1"
-    implementation "io.insert-koin:koin-android-compat:4.1.1"
+    // Dependency Injection - Dagger
+    implementation libs.dagger
+    implementation libs.dagger.android
+    implementation libs.dagger.android.support
+    kapt libs.dagger.compiler
+    kapt libs.dagger.android.processor
 
+    // Dependency Injection - Koin
+    implementation libs.koin.android
+    implementation libs.koin.android.compat
 
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.10.0"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0"
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.10.0"
-//    api deps.kotlin.core_ext
-    api deps.preference_ktx
+    // WorkManager
+    implementation libs.androidx.work.runtime.ktx
+    implementation libs.androidx.work.rxjava2
 
-    //Lifecycle
-    implementation "androidx.lifecycle:lifecycle-extensions:$versions.lifecycle"
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.10.0'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.10.0'
-
-    //Coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2'
-
-    /*Sub -> ------------------ Dagger Dependencies ------------------*/
-    api deps.dagger.runtime
-    kapt deps.dagger.compiler
-
-    implementation 'com.google.dagger:dagger:2.57.2'
-    implementation 'com.google.dagger:dagger-android:2.57.2'
-    implementation 'com.google.dagger:dagger-android-support:2.57.2'
-    kapt 'com.google.dagger:dagger-android-processor:2.57.2'
-
-    //Moshi
-    implementation 'com.squareup.moshi:moshi-kotlin:1.15.2'
-    implementation 'com.squareup.moshi:moshi:1.15.2'
-
-    // WorkManager with Coroutines
-    implementation 'androidx.work:work-runtime-ktx:2.11.0'
-    implementation 'androidx.work:work-rxjava2:2.11.0'
+    // Debug Tools
+    implementation libs.timber
 }

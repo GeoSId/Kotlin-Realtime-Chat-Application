@@ -1,30 +1,9 @@
-buildscript {
-    apply from: 'versions.gradle'
-    apply from: 'keystore.gradle'
-    repositories {
-        google()
-        mavenCentral()
-        maven {
-            url = uri("https://plugins.gradle.org/m2/")
-        }
-    }
-
-    dependencies {
-        classpath "com.android.tools.build:gradle:$versions.android_gradle_plugin"
-        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.21'
-        classpath deps.google_services
-        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$versions.navigation"
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.6'
-    }
-}
-
 plugins {
-    id 'com.android.application' version '8.13.2' apply false
-    id 'com.android.library' version '8.13.2' apply false
-    id 'org.jetbrains.kotlin.android' version '2.2.21' apply false
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.library) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.kapt) apply false
+    alias(libs.plugins.google.services) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
+    alias(libs.plugins.navigation.safeargs) apply false
 }
-
-ext {
-    cardviewVersion = '1.0.0'
-}
-
