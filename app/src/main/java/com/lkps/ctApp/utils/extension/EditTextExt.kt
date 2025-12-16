@@ -25,7 +25,7 @@ fun EditText.afterTextChangedLowerCase(afterTextChangedLowerCase: (String) -> Un
                 val matcher = upperCaseRegex.matcher(editable)
                 while (matcher.find()) {
                     val upperCaseRegion = editable.subSequence(matcher.start(), matcher.end())
-                    editable.replace(matcher.start(), matcher.end(), upperCaseRegion.toString().toLowerCase())
+                    editable.replace(matcher.start(), matcher.end(), upperCaseRegion.toString().lowercase())
                 }
             }
             afterTextChangedLowerCase.invoke(editable.toString())

@@ -1,8 +1,8 @@
 package com.lkps.ctApp.controllers.crash
 
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.crashlytics.ktx.setCustomKeys
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.crashlytics.crashlytics
+import com.google.firebase.crashlytics.setCustomKeys
+import com.google.firebase.Firebase
 
 object CrashlyticsController {
     fun sendException(userId: String, errorCode: Int, exception: String, ex: Exception) {

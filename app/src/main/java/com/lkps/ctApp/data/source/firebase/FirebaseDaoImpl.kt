@@ -125,7 +125,7 @@ class FirebaseDaoImpl {
     ) {
         val user = User()
         callBack(NetworkState.LOADING)
-        val usernameLowerCase = username.toLowerCase(Locale.ROOT)
+        val usernameLowerCase = username.lowercase(Locale.ROOT)
         user.username = usernameLowerCase
         user.userId = userId
         user.usernameList = User.nameToArray(usernameLowerCase)
@@ -207,7 +207,7 @@ class FirebaseDaoImpl {
         try {
 
             callBack(NetworkState.LOADING)
-            val document = dbRefUsernames.document(username.toLowerCase(Locale.ROOT)).get().await()
+            val document = dbRefUsernames.document(username.lowercase(Locale.ROOT)).get().await()
             callBack(if (document.exists()) NetworkState.FAILED else NetworkState.LOADED)
         } catch (e: FirebaseFirestoreException) {
             callBack(NetworkState.FAILED)
