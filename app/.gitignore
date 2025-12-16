@@ -1,1 +1,6 @@
 /build
+app/google-services.json
+/.idea
+.gradle/
+.idea/
+keystore.gradle
