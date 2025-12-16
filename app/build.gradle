@@ -165,6 +165,6 @@ dependencies {
     implementation 'com.squareup.moshi:moshi:1.15.2'
 
     // WorkManager with Coroutines
-    implementation 'androidx.work:work-runtime-ktx:2.10.0'
-    implementation 'androidx.work:work-rxjava2:2.10.0'
+    implementation 'androidx.work:work-runtime-ktx:2.11.0'
+    implementation 'androidx.work:work-rxjava2:2.11.0'
 }
