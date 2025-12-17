@@ -1,6 +1,5 @@
 package com.lkps.ctApp.data.worker
 
-import android.util.Log
 import androidx.work.*
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
