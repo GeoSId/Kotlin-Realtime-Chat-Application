@@ -38,4 +38,11 @@ object AppModule {
     @Singleton
     @Provides
     fun provideIoDispatcher() = Dispatchers.IO
+
+    @JvmStatic
+    @Singleton
+    @Provides
+    fun provideDeviceController(): DeviceController {
+        return DeviceController()
+    }
 }

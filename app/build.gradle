@@ -14,7 +14,7 @@ kotlin {
 }
 
 if (file("signconfigs.gradle").exists()) {
-//    apply from: "signconfigs.gradle"
+    apply from: "signconfigs.gradle"
 }
 
 android {

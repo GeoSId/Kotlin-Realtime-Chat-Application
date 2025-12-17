@@ -22,7 +22,6 @@ import androidx.work.*
 import com.lkps.ct.R
 import com.lkps.ct.databinding.FragmentChatBinding
 import com.lkps.ctApp.data.model.Message
-import com.lkps.ctApp.data.source.firebase.FirebaseDaoImpl
 import com.lkps.ctApp.testing.CustomDaggerFragment
 import com.lkps.ctApp.utils.FileHelper
 import com.lkps.ctApp.utils.IntentManager.getIntentType
@@ -162,7 +161,7 @@ open class ChatFragment : CustomDaggerFragment() {
             FileHelper.currentPhotoPath = photoFile.absolutePath
             chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cameraIntent))
         }
-        requireActivity().startActivityForResult(chooserIntent, FirebaseDaoImpl.RC_PHOTO_PICKER)
+        (requireActivity() as? com.lkps.ctApp.view.MainActivity)?.launchPhotoPicker(chooserIntent)
     }
 
     private fun onSendButtonTouch() = object : View.OnTouchListener {

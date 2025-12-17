@@ -1,9 +1,6 @@
 package com.lkps.ctApp.view
 
 import android.app.Activity
-import android.content.Context
-import android.content.DialogInterface
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -11,18 +8,15 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.doOnAttach
 import androidx.databinding.DataBindingUtil
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.firebase.ui.auth.AuthUI
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
-import com.google.firebase.auth.auth
-import com.google.firebase.Firebase
 import com.lkps.ct.R
 import com.lkps.ct.databinding.ActivityMainBinding
 import com.lkps.ctApp.controllers.device.DeviceController
@@ -37,13 +31,19 @@ import com.lkps.ctApp.utils.convertFromString
 import com.lkps.ctApp.utils.states.AuthenticationState
 import com.lkps.ctApp.utils.states.FragmentState
 import dagger.android.support.DaggerAppCompatActivity
-import java.util.*
 import javax.inject.Inject
 
 class MainActivity : DaggerAppCompatActivity() {
 
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
+
+    @Inject
+    lateinit var deviceController: DeviceController
 
     private lateinit var binding: ActivityMainBinding
     private val navigationManager by lazy { NavigationManager(this, binding) }
@@ -51,6 +51,20 @@ class MainActivity : DaggerAppCompatActivity() {
 
     private var waitForResultFromSignIn = false
     private var myMenu: Menu? = null
+
+    // Activity Result API launcher for sign-in
+    private val signInLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        handleSignInResult(result)
+    }
+
+    // Activity Result API launcher for photo picker
+    private val photoPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        handlePhotoPickerResult(result)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,43 +74,22 @@ class MainActivity : DaggerAppCompatActivity() {
             WindowManager.LayoutParams.FLAG_SECURE
         )
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        
+
         // Initialize navigation manager and start app when view is ready
-        binding.root.doOnAttach { 
+        binding.root.doOnAttach {
             navigationManager
             startApp()
         }
 
-        val user = Firebase.auth.currentUser
-        user?.let {
-            // Name, email address, and profile photo Url
-            val name = user.displayName
-            val email = user.email
-            val photoUrl = user.photoUrl
-            // Check if user's email is verified
-            val emailVerified = user.isEmailVerified
-            // The user's ID, unique to the Firebase project. Do NOT use this value to
-            // authenticate with your backend server, if you have one. Use
-            // FirebaseUser.getToken() instead.
-            val uid = user.uid
-        }
+        setupBackPressHandler()
+    }
 
-        onBackPressedDispatcher.addCallback(this /* lifecycle owner */, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-
-            }
-        })
-
+    private fun setupBackPressHandler() {
         onBackPressedDispatcher.addCallback(
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    // Do custom work here
                     navigationManager.onBack(this@MainActivity, firebaseVm)
-                    // if you want onBackPressed() to be called as normal afterwards
-                    if (isEnabled) {
-                       // isEnabled = false  this disable the backPressed
-                    }
                 }
             }
         )
@@ -104,7 +97,6 @@ class MainActivity : DaggerAppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val deviceController = DeviceController()
         deviceController.logOutAll(applicationContext)
     }
 
@@ -122,18 +114,13 @@ class MainActivity : DaggerAppCompatActivity() {
         checkGooglePlayServices()
     }
 
-    //IF WE DONT TAKE PUSH MAY THIS IS THE PROBLEM
     private fun checkGooglePlayServices(): Boolean {
-        // 1
         val status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
-        // 2
         return if (status != ConnectionResult.SUCCESS) {
-            Log.e("MainActivity", "Error")
-            // ask user to update google play services and manage the error.
+            Log.e(TAG, "Google Play Services error")
             false
         } else {
-            // 3
-            Log.i("MainActivity", "Google play services updated")
+            Log.i(TAG, "Google Play Services updated")
             true
         }
     }
@@ -144,33 +131,50 @@ class MainActivity : DaggerAppCompatActivity() {
                 is AuthenticationState.Authenticated -> onAuthenticated()
                 is AuthenticationState.Unauthenticated -> onUnauthenticated()
                 is AuthenticationState.InvalidAuthentication -> {
-                    Log.e("MainActivity", "Invalid authentication state")
+                    Log.e(TAG, "Invalid authentication state")
                 }
             }
         }
     }
 
     private fun observeFragmentState() {
-        firebaseVm.fragmentState.observe(this, Observer {
-            it?.let {
-                if (it.first == FragmentState.START && it.second) {
-                    handleMenu(showBack = false, showMenuOptions = true, menuTitle = resources.getString(R.string.app_name))
-                } else if (it.first == FragmentState.CHAT && it.second) {
-                    handleMenu(showBack = true, showMenuOptions = false, menuTitle = firebaseVm.clientUserName)
-                } else if (it.first == FragmentState.MANAGER && it.second) {
-                    handleMenu(showMenuOptions = false)
-                } else if (it.first == FragmentState.USERNAME && it.second) {
-                    handleMenu(showBack = false, showMenuOptions = false)
-                } else if (it.first == FragmentState.SEARCH && it.second) {
-                    handleMenu(showBack = true, showMenuOptions = false, menuTitle =  resources.getString(R.string.app_name))
+        firebaseVm.fragmentState.observe(this) { fragmentStatePair ->
+            fragmentStatePair?.let { (state, isActive) ->
+                if (isActive) {
+                    when (state) {
+                        FragmentState.START -> handleMenu(
+                            showBack = false,
+                            showMenuOptions = true,
+                            menuTitle = resources.getString(R.string.app_name)
+                        )
+                        FragmentState.CHAT -> handleMenu(
+                            showBack = true,
+                            showMenuOptions = false,
+                            menuTitle = firebaseVm.clientUserName
+                        )
+                        FragmentState.MANAGER -> handleMenu(showMenuOptions = false)
+                        FragmentState.USERNAME -> handleMenu(
+                            showBack = false,
+                            showMenuOptions = false
+                        )
+                        FragmentState.SEARCH -> handleMenu(
+                            showBack = true,
+                            showMenuOptions = false,
+                            menuTitle = resources.getString(R.string.app_name)
+                        )
+                        else -> { /* No action needed */ }
+                    }
+                    navigationManager.onFragmentStateChange(state)
                 }
-                if (!it.second) return@Observer
-                navigationManager.onFragmentStateChange(it.first)
             }
-        })
+        }
     }
 
-    private fun handleMenu(showBack: Boolean = true, showMenuOptions: Boolean = true, menuTitle: String = resources.getString(R.string.app_name)){
+    private fun handleMenu(
+        showBack: Boolean = true,
+        showMenuOptions: Boolean = true,
+        menuTitle: String = resources.getString(R.string.app_name)
+    ) {
         title = menuTitle
         actionBar?.setDisplayUseLogoEnabled(true)
         supportActionBar?.setDisplayHomeAsUpEnabled(showBack)
@@ -178,7 +182,6 @@ class MainActivity : DaggerAppCompatActivity() {
         myMenu?.findItem(R.id.search)?.isVisible = showMenuOptions
         myMenu?.findItem(R.id.sign_out_menu)?.isVisible = showMenuOptions
         myMenu?.findItem(R.id.manger_menu)?.isVisible = showMenuOptions
-
     }
 
     private fun onAuthenticated() {
@@ -187,7 +190,7 @@ class MainActivity : DaggerAppCompatActivity() {
     }
 
     private fun onUnauthenticated() {
-        if (waitForResultFromSignIn.not()) {
+        if (!waitForResultFromSignIn) {
             firebaseVm.onSignOut()
             startSignInActivity()
             supportActionBar?.hide()
@@ -197,34 +200,38 @@ class MainActivity : DaggerAppCompatActivity() {
 
     private fun checkNotificationIntent() {
         if (intent.hasExtra(NOTIFICATION_INTENT)) {
-            val msg: Message = convertFromString(intent.getStringExtra(NOTIFICATION_INTENT) ?: "")?: return
+            val msg: Message = convertFromString(
+                intent.getStringExtra(NOTIFICATION_INTENT) ?: ""
+            ) ?: return
             val name = msg.name
-            if(name == null){
+            if (name == null) {
                 firebaseVm.setFragmentState(FragmentState.START)
-            }else{
+            } else {
                 firebaseVm.setReceiverFromPush(msg.senderId, name)
                 firebaseVm.setFragmentState(FragmentState.CHAT)
             }
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == FirebaseDaoImpl.RC_SIGN_IN) {
-            when (resultCode) {
-                Activity.RESULT_OK -> supportActionBar?.show()
-                Activity.RESULT_CANCELED -> finish()
-            }
-            waitForResultFromSignIn = false
-        } else if (requestCode == FirebaseDaoImpl.RC_PHOTO_PICKER && resultCode == Activity.RESULT_OK) {
-            var uri = Uri.EMPTY
-            var fileExtension = ""
-            if(data != null){
-                uri =  data.data
+    private fun handleSignInResult(result: ActivityResult) {
+        when (result.resultCode) {
+            Activity.RESULT_OK -> supportActionBar?.show()
+            Activity.RESULT_CANCELED -> finish()
+        }
+        waitForResultFromSignIn = false
+    }
+
+    private fun handlePhotoPickerResult(result: ActivityResult) {
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val uri: Uri
+            val fileExtension: String
+
+            if (data != null) {
+                uri = data.data ?: Uri.EMPTY
                 fileExtension = getTypeFromUri(data)
-            }else{
-                uri = galleryAddPic(this)
+            } else {
+                uri = galleryAddPic(this) ?: Uri.EMPTY
                 fileExtension = getFileExtensionFromUri(uri)
             }
             firebaseVm.pushFile(uri, fileExtension)
@@ -239,20 +246,28 @@ class MainActivity : DaggerAppCompatActivity() {
                 .build()
         )
 
-        val auth = AuthUI.getInstance()
+        val signInIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
             .setTheme(R.style.LoginTheme)
-//            .setIsSmartLockEnabled(false)
             .setAvailableProviders(providers)
             .setLogo(R.drawable.ic_launcher)
-        startActivityForResult(auth.build(), FirebaseDaoImpl.RC_SIGN_IN)
+            .build()
+
+        signInLauncher.launch(signInIntent)
         firebaseVm.setFragmentState(FragmentState.START)
     }
 
+    /**
+     * Launches the photo picker activity using Activity Result API.
+     * Call this method from FirebaseViewModel or wherever photo selection is needed.
+     */
+    fun launchPhotoPicker(intent: android.content.Intent) {
+        photoPickerLauncher.launch(intent)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        val inflater = menuInflater
-        inflater.inflate(R.menu.main_menu, menu)
-        if(myMenu == null) {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        if (myMenu == null) {
             myMenu = menu
         }
         return true
@@ -262,7 +277,7 @@ class MainActivity : DaggerAppCompatActivity() {
         return when (item.itemId) {
             R.id.sign_out_menu -> {
                 AuthUI.getInstance().signOut(this)
-                DeviceController().deleteDeviceToken(this)
+                deviceController.deleteDeviceToken(this)
                 true
             }
             R.id.manger_menu -> {
@@ -278,19 +293,5 @@ class MainActivity : DaggerAppCompatActivity() {
                 true
             }
         }
-    }
-
-    private fun showMessageDialog(
-        context: Context?,
-        message: String,
-        @StringRes positive: Int?,
-        positiveListener: DialogInterface.OnClickListener?
-    ) {
-        val builder = context?.let { AlertDialog.Builder(it, R.style.AlertDialogStyle) }
-        builder?.setCancelable(false)
-        builder?.setTitle(R.string.app_name)
-        builder?.setMessage(message)
-        positive?.let { builder?.setPositiveButton(it, positiveListener) }
-        builder?.show()
     }
 }
