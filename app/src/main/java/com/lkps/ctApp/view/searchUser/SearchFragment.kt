@@ -5,7 +5,6 @@ import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
-import com.lkps.ct.R
 import com.lkps.ct.databinding.FragmentSearchBinding
 import com.lkps.ctApp.testing.CustomDaggerFragment
 import com.lkps.ctApp.utils.states.FragmentState

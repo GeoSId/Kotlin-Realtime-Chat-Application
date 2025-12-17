@@ -1,7 +1,9 @@
 package com.lkps.ctApp.data.model
 
+import androidx.annotation.Keep
 import com.squareup.moshi.JsonClass
 
+@Keep
 @JsonClass(generateAdapter = true)
 data class User(
     var userId: String? = null,

@@ -1,9 +1,11 @@
 package com.lkps.ctApp.data.model
 
+import androidx.annotation.Keep
 import com.lkps.ctApp.data.source.firebase.MessageLiveData
 import com.lkps.ctApp.data.source.firebase.ReceiverLiveData
 import com.google.firebase.firestore.Exclude
 
+@Keep
 data class Chat(
     var chatId: String? = null,
     var senderId: String? = null,

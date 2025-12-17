@@ -141,3 +141,26 @@
 
 # With R8 full mode generic signatures are stripped for classes that are not kept.
 -keep,allowobfuscation,allowshrinking class retrofit2.Response
+
+# Firebase Firestore model classes - keep no-arg constructors and all members
+-keep class com.lkps.ctApp.data.model.** { *; }
+-keepclassmembers class com.lkps.ctApp.data.model.** {
+    public <init>();
+    public <init>(...);
+}
+
+# Keep Kotlin data classes used with Firebase
+-keepclassmembers class * {
+    @com.google.firebase.firestore.PropertyName <fields>;
+}
+
+# Keep Moshi generated adapters
+-keep class **JsonAdapter {
+    <init>(...);
+    <fields>;
+}
+-keep class com.squareup.moshi.** { *; }
+-keepclassmembers class * {
+    @com.squareup.moshi.* <methods>;
+    @com.squareup.moshi.* <fields>;
+}

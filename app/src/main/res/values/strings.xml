@@ -31,4 +31,23 @@
     <string name="update">Update</string>
     <string name="ok">OK</string>
 
+    <!-- Permission related strings -->
+    <string name="permission_microphone">Microphone</string>
+    <string name="permission_camera">Camera</string>
+    <string name="permission_storage">Storage</string>
+    <string name="permission_photos">Photos</string>
+    <string name="permission_videos">Videos</string>
+    <string name="permission_audio">Audio files</string>
+    <string name="permission_notifications">Notifications</string>
+    
+    <string name="permissions_required_title">Permissions Required</string>
+    <string name="permissions_required_message">This app needs access to %1$s to function properly. Please grant these permissions to continue.</string>
+    <string name="permissions_denied_title">Permissions Denied</string>
+    <string name="permissions_denied_message">Some required permissions were denied. You can grant them in app settings or exit the app.</string>
+    <string name="permissions_necessary">Permissions are necessary for the app to work properly</string>
+    
+    <string name="grant_permissions">Grant</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="exit_app">Exit</string>
+
 </resources>

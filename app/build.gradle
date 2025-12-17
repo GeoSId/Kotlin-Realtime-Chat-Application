@@ -8,13 +8,18 @@ plugins {
     alias(libs.plugins.navigation.safeargs)
 }
 
+// Use JVM Toolchain to ensure consistent Java/Kotlin versions
+kotlin {
+    jvmToolchain(17)
+}
+
 if (file("signconfigs.gradle").exists()) {
     apply from: "signconfigs.gradle"
 }
 
 android {
     namespace 'com.lkps.ct'
-    compileSdk 36
+    compileSdkVersion(36)
 
     defaultConfig {
         applicationId "com.lkps.ct"
@@ -64,10 +69,6 @@ android {
         dataBinding true
         viewBinding true
         buildConfig true
-    }
-
-    kotlinOptions {
-        jvmTarget = "17"
     }
 
     testOptions {

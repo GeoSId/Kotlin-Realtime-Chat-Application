@@ -1,14 +1,11 @@
 package com.lkps.ctApp.view
 
-import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -17,8 +14,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.core.view.doOnAttach
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
@@ -38,7 +33,6 @@ import com.lkps.ctApp.utils.Constant.NOTIFICATION_INTENT
 import com.lkps.ctApp.utils.IntentManager.galleryAddPic
 import com.lkps.ctApp.utils.IntentManager.getFileExtensionFromUri
 import com.lkps.ctApp.utils.IntentManager.getTypeFromUri
-import com.lkps.ctApp.utils.Utility
 import com.lkps.ctApp.utils.convertFromString
 import com.lkps.ctApp.utils.states.AuthenticationState
 import com.lkps.ctApp.utils.states.FragmentState
@@ -46,17 +40,7 @@ import dagger.android.support.DaggerAppCompatActivity
 import java.util.*
 import javax.inject.Inject
 
-class MainActivity : DaggerAppCompatActivity(){
-
-    companion object {
-        private const val INITIAL_REQUEST = 1337
-        private val INITIAL_PERMS = arrayOf(
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-    }
+class MainActivity : DaggerAppCompatActivity() {
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
@@ -66,7 +50,6 @@ class MainActivity : DaggerAppCompatActivity(){
     private val firebaseVm: FirebaseViewModel by viewModels { viewModelFactory }
 
     private var waitForResultFromSignIn = false
-
     private var myMenu: Menu? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,8 +60,12 @@ class MainActivity : DaggerAppCompatActivity(){
             WindowManager.LayoutParams.FLAG_SECURE
         )
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        binding.root.doOnAttach { navigationManager }
-        checkPermissions()
+        
+        // Initialize navigation manager and start app when view is ready
+        binding.root.doOnAttach { 
+            navigationManager
+            startApp()
+        }
 
         val user = Firebase.auth.currentUser
         user?.let {
@@ -121,47 +108,12 @@ class MainActivity : DaggerAppCompatActivity(){
         deviceController.logOutAll(applicationContext)
     }
 
-    private fun checkPermissions() {
-        if (checkHasPermissions().not()) {
-            ActivityCompat.requestPermissions(this,
-                INITIAL_PERMS,
-                INITIAL_REQUEST
-            )
-        } else {
-            startApp()
-        }
-    }
-
-    private fun checkHasPermissions(): Boolean {
-        var result = false
-        for (i in INITIAL_PERMS) {
-            result = if (isPermissionGranted(i)) true else return false
-        }
-        return result
-    }
-
-    private fun isPermissionGranted(i: String): Boolean {
-        return ContextCompat.checkSelfPermission(this, i) == PackageManager.PERMISSION_GRANTED
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            INITIAL_REQUEST -> if (checkHasPermissions()) {
-                startApp()
-            } else {
-                Utility.makeText(this, "Permissions are necessary")
-                Handler().postDelayed({ checkPermissions() }, 1500)
-            }
-        }
-    }
-
-    private fun startApp(){
+    private fun startApp() {
         firebaseVm.fetchConfigs(this)
         observeAuthState()
         observeFragmentState()
 
-        if (intent != null){
+        if (intent != null) {
             checkNotificationIntent()
             firebaseVm.setCTIntent(intent)
         }
@@ -187,12 +139,12 @@ class MainActivity : DaggerAppCompatActivity(){
     }
 
     private fun observeAuthState() {
-        firebaseVm.authenticationState.observe(this) {
-            when (it) {
+        firebaseVm.authenticationState.observe(this) { userWithState ->
+            when (userWithState.second) {
                 is AuthenticationState.Authenticated -> onAuthenticated()
                 is AuthenticationState.Unauthenticated -> onUnauthenticated()
                 is AuthenticationState.InvalidAuthentication -> {
-                    Log.e("","")
+                    Log.e("MainActivity", "Invalid authentication state")
                 }
             }
         }
