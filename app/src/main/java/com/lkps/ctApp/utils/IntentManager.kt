@@ -78,12 +78,4 @@ object IntentManager {
     private fun hasActionSendToIntent(intent: Intent):Boolean{
         return intent.action == Intent.ACTION_SENDTO
     }
-
-    private fun handleSendText(intent: Intent) {
-        intent.getStringExtra(Intent.EXTRA_TEXT)?.let {}
-    }
-
-    private fun handleSendMultipleImages(intent: Intent) {
-        intent.getParcelableArrayListExtra<Parcelable>(Intent.EXTRA_STREAM)?.let {}
-    }
 }

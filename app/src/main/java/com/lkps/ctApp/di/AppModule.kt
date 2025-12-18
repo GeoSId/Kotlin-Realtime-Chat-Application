@@ -1,17 +1,14 @@
 package com.lkps.ctApp.di
 
 import com.lkps.ctApp.controllers.device.DeviceController
-import com.lkps.ctApp.controllers.shared_preferences.SharedPrefsController
 import com.lkps.ctApp.data.repository.Repository
 import com.lkps.ctApp.data.repository.RepositoryImpl
 import com.lkps.ctApp.data.source.firebase.FirebaseDaoImpl
-import com.lkps.ctApp.data.worker.WorkerController
 import com.lkps.ctApp.di.viewModel.ViewModelModule
 import dagger.Module
 import dagger.Provides
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import org.koin.dsl.module
 import javax.inject.Singleton
 
 @Module(includes = [(ViewModelModule::class)])

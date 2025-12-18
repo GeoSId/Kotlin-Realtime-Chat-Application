@@ -85,7 +85,7 @@ class ChatRoomListLiveData : MutableLiveData<List<Chat>>() {
             .limit(1)
     }
 
-    private fun sortChatRooms() { //todo may sort bby time
+    private fun sortChatRooms() { //todo may sort by timeStamp
 //        val sortedList = value?.sortedByDescending {
 //            val timestamp = it.message?.value?.timestamp
 //            if (timestamp is Timestamp) timestamp.seconds else 0

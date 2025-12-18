@@ -28,7 +28,6 @@ import com.lkps.ctApp.utils.IntentManager.getIntentType
 import com.lkps.ctApp.utils.Utility
 import com.lkps.ctApp.utils.bindingFakeAudioProgress
 import com.lkps.ctApp.utils.extension.afterTextChanged
-import com.lkps.ctApp.utils.states.FragmentState
 import com.lkps.ctApp.utils.states.NetworkState
 import com.lkps.ctApp.view.FirebaseViewModel
 import com.lkps.ctApp.view.adapters.MsgAdapter
@@ -76,7 +75,7 @@ open class ChatFragment : CustomDaggerFragment() {
 
     private fun  deleteChatObservre(): Observer<List<WorkInfo>> {
         return Observer {  listofworkInfo ->
-            Log.e("WORKERRR",  " START")
+            Log.e(TAG,  " START")
 
             if (listofworkInfo.isNullOrEmpty()){
                 return@Observer
@@ -86,7 +85,7 @@ open class ChatFragment : CustomDaggerFragment() {
             if(workInfo.state.isFinished){
                 //showWorkFinished()
             }
-           Log.e("WORKERRR",  " "+workInfo.state)
+           Log.e(TAG,  " "+workInfo.state)
         }
     }
 

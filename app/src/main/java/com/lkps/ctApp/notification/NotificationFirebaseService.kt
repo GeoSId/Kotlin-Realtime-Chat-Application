@@ -27,9 +27,6 @@ class NotificationFirebaseService : FirebaseMessagingService() {
                 val refreshedToken = it.result.toString() ?: return@addOnCompleteListener
             }
         }
-//        FirebaseInstanceId.getInstance().instanceId.addOnCompleteListener {
-//            val refreshedToken = it.result?.token ?: return@addOnCompleteListener
-//        }
     }
 
     private fun createNotifications(message: Message) {

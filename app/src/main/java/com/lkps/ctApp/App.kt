@@ -7,7 +7,6 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.lkps.ctApp.di.DaggerAppComponent
-import com.lkps.ctApp.controllers.locale.LocaleController
 import dagger.android.AndroidInjector
 import dagger.android.support.DaggerApplication
 
@@ -25,7 +24,6 @@ class App : DaggerApplication(), LifecycleObserver {
 
     override fun onCreate() {
         super.onCreate()
-        LocaleController.setLocale(resources)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         appContext = applicationContext

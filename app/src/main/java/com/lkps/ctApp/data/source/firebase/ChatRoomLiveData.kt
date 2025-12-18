@@ -79,7 +79,7 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
 //                val isFromCash = documentSnapshot.metadata.isFromCache
 //                val isFromPendWrites = documentSnapshot.metadata.hasPendingWrites()
                 val isSameNameWithMessage = msg.name.equals(user?.username)
-                Log.e("TET","LISTENER>> "  +" / SIze: "+msgListSize)
+                Log.e("ChatRoomLiveData","LISTENER>> "  +" / SIze: "+msgListSize)
 //                Log.e(
 //                    "TET",
 //                    "counter: " + counter + " / cashing: " + isFromCash + " / PendiWr: " + isFromPendWrites
@@ -273,12 +273,12 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
                 }
             }
             .addOnFailureListener {
-                Log.e("", "")
+                Log.e("ChatRoomLiveData", "addOnFailureListener")
             }
     }
 
     override fun onActive() {
-        Log.e("TET", "onActiveeeeeeeeeeeeeeeeee")
+        Log.e("ChatRoomLiveData", "onActive")
     }
 
     public override fun onInactive() {

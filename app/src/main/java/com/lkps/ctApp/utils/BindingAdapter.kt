@@ -1,8 +1,6 @@
 package com.lkps.ctApp.utils
 
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -19,7 +17,6 @@ import com.lkps.ctApp.data.model.Message
 import com.lkps.ctApp.data.model.User
 import com.lkps.ctApp.utils.Constant.ONE_MESSAGE
 import com.lkps.ctApp.utils.extension.saveTo
-import com.lkps.ctApp.utils.extension.toDp
 import com.lkps.ctApp.view.adapters.MsgAdapter
 import com.lkps.ctApp.view.adapters.ChatListAdapter
 import com.lkps.ctApp.view.adapters.SearchAdapter

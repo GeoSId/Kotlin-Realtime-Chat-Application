@@ -20,9 +20,7 @@ import com.google.android.gms.common.GoogleApiAvailability
 import com.lkps.ct.R
 import com.lkps.ct.databinding.ActivityMainBinding
 import com.lkps.ctApp.controllers.device.DeviceController
-import com.lkps.ctApp.controllers.locale.LocaleController
 import com.lkps.ctApp.data.model.Message
-import com.lkps.ctApp.data.source.firebase.FirebaseDaoImpl
 import com.lkps.ctApp.utils.Constant.NOTIFICATION_INTENT
 import com.lkps.ctApp.utils.IntentManager.galleryAddPic
 import com.lkps.ctApp.utils.IntentManager.getFileExtensionFromUri
@@ -68,7 +66,6 @@ class MainActivity : DaggerAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        LocaleController.setLocale(resources)
         window.setFlags(
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
@@ -215,14 +212,14 @@ class MainActivity : DaggerAppCompatActivity() {
 
     private fun handleSignInResult(result: ActivityResult) {
         when (result.resultCode) {
-            Activity.RESULT_OK -> supportActionBar?.show()
-            Activity.RESULT_CANCELED -> finish()
+            RESULT_OK -> supportActionBar?.show()
+            RESULT_CANCELED -> finish()
         }
         waitForResultFromSignIn = false
     }
 
     private fun handlePhotoPickerResult(result: ActivityResult) {
-        if (result.resultCode == Activity.RESULT_OK) {
+        if (result.resultCode == RESULT_OK) {
             val data = result.data
             val uri: Uri
             val fileExtension: String

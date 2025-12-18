@@ -32,7 +32,6 @@ class FirebaseViewModel @Inject constructor(
     private var isUsernameAvailableJob: Job? = null
     private var searchForUserJob: Job? = null
     private var usersJob: Job? = null
-
     private val _userList = MutableLiveData<List<User>>()
     val userList: LiveData<List<User>> = _userList
 
@@ -86,13 +85,6 @@ class FirebaseViewModel @Inject constructor(
         }
     userWithState
     }
-
-//    val authenticationState = Transformations.map(user) { userWithState ->
-//        if (userWithState.second is AuthenticationState.Authenticated) {
-//            userWithState.first?.username ?: setFragmentState(FragmentState.USERNAME)
-//        }
-//        userWithState.second
-//    }
 
     fun fetchConfigs(context: Context?){
         repository.fetchConfigMsgLength(context) {
@@ -161,17 +153,6 @@ class FirebaseViewModel @Inject constructor(
         }
     }
 
-//    fun getUsersIds() {
-//        usersIdsJob?.cancel()
-//        usersIdsJob = viewModelScope.launch {
-//            repository.getUsersIds { networkState, userList ->
-//                if (userList.size > 0) {
-//                    usersIdsList.addAll(userList)
-//                }
-//            }
-//        }
-//    }
-
     fun getUsers() {
         val list: MutableList<User> = mutableListOf()
         usersJob?.cancel()
@@ -209,41 +190,6 @@ class FirebaseViewModel @Inject constructor(
         this.intent = intent
         shareUriFile = getIntentUri(intent)
     }
-
-//    fun deleteUserName() {
-//        deleteUserNamesJob?.cancel()
-//        deleteUserNamesJob = viewModelScope.launch {
-//            repository.deleteUsernames {
-//                _usernameStatus.value = it
-//            }
-//        }
-//    }
-
-//    fun deleteUsers(userId: String) {
-//        usersIdsJob?.cancel()
-//        usersIdsJob = viewModelScope.launch {
-//            repository.deleteUsers(userId) {
-//                _deleteUsersStatus.value = it
-//                getUsers()
-//            }
-//        }
-//    }
-
-//    fun deleteChatRooms() {
-//        _chatRoomList.setChatCallBack(object : ChatRoomListLiveData.OnChatCallBack {
-//            override fun onListAvailable(chatRoomList: MutableList<Chat>) {
-//                deleteChatRoomJob?.cancel()
-//                deleteChatRoomJob = viewModelScope.launch {
-//                    for (chat in chatRoomList) {
-//                        val charId = chat.chatId ?: ""
-//                        repository.deleteChatRooms(charId) {
-//                            _deleteChatRoomsStatus.value = it
-//                        }
-//                    }
-//                }
-//            }
-//        })
-//    }
 
     fun validationApp(context: Context?, function: () -> Unit) {
         val deviceController = DeviceController()
