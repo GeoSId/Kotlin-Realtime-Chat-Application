@@ -4,24 +4,35 @@
  * Setup Instructions:
  * 1. Install Firebase CLI: npm install -g firebase-tools
  * 2. Login: firebase login
- * 3. Initialize functions: firebase init functions (select JavaScript)
- * 4. Deploy: firebase deploy --only functions
+ * 3. Deploy: firebase deploy --only functions
  * 
  * This function listens for new messages in Firestore and sends push notifications.
  */
 
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
+const { initializeApp } = require("firebase-admin/app");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getMessaging } = require("firebase-admin/messaging");
 
-admin.initializeApp();
+initializeApp();
+
+const db = getFirestore();
+const messaging = getMessaging();
 
 /**
  * Triggered when a new message is added to any chat room.
  * Sends a push notification to the receiver.
  */
-exports.sendChatNotification = functions.firestore
-    .document("chatRooms/{chatRoomId}/chatRoom/{messageId}")
-    .onCreate(async (snapshot, context) => {
+exports.sendChatNotification = onDocumentCreated(
+    "chatRooms/{chatRoomId}/chatRoom/{messageId}",
+    async (event) => {
+        const snapshot = event.data;
+        if (!snapshot) {
+            console.log("No data associated with the event");
+            return null;
+        }
+
         const message = snapshot.data();
         const receiverId = message.receiverId;
         const senderId = message.senderId;
@@ -34,10 +45,7 @@ exports.sendChatNotification = functions.firestore
 
         try {
             // Get receiver's FCM tokens
-            const userDoc = await admin.firestore()
-                .collection("users")
-                .doc(receiverId)
-                .get();
+            const userDoc = await db.collection("users").doc(receiverId).get();
 
             if (!userDoc.exists) {
                 console.log("Receiver user not found");
@@ -85,14 +93,14 @@ exports.sendChatNotification = functions.firestore
                         clickAction: "OPEN_CHAT_ACTIVITY",
                     },
                 },
-                tokens: fcmTokens, // Send to all user's devices
+                tokens: fcmTokens,
             };
 
             // Send using sendEachForMulticast for multiple tokens
-            const response = await admin.messaging().sendEachForMulticast(fcmMessage);
-            
+            const response = await messaging.sendEachForMulticast(fcmMessage);
+
             console.log(`Successfully sent ${response.successCount} notifications`);
-            
+
             // Handle failed tokens (remove invalid ones)
             if (response.failureCount > 0) {
                 const failedTokens = [];
@@ -109,12 +117,9 @@ exports.sendChatNotification = functions.firestore
 
                 // Remove invalid tokens from user's document
                 if (failedTokens.length > 0) {
-                    await admin.firestore()
-                        .collection("users")
-                        .doc(receiverId)
-                        .update({
-                            fcmToken: admin.firestore.FieldValue.arrayRemove(...failedTokens)
-                        });
+                    await db.collection("users").doc(receiverId).update({
+                        fcmToken: FieldValue.arrayRemove(...failedTokens)
+                    });
                     console.log(`Removed ${failedTokens.length} invalid tokens`);
                 }
             }
@@ -124,25 +129,26 @@ exports.sendChatNotification = functions.firestore
             console.error("Error sending notification:", error);
             return null;
         }
-    });
+    }
+);
 
 /**
  * HTTP callable function to send a notification directly.
  * Can be called from the app if needed.
  */
-exports.sendNotification = functions.https.onCall(async (data, context) => {
+exports.sendNotification = onCall(async (request) => {
     // Verify the user is authenticated
-    if (!context.auth) {
-        throw new functions.https.HttpsError(
+    if (!request.auth) {
+        throw new HttpsError(
             "unauthenticated",
             "User must be authenticated to send notifications"
         );
     }
 
-    const { receiverId, message } = data;
+    const { receiverId, message } = request.data;
 
     if (!receiverId || !message) {
-        throw new functions.https.HttpsError(
+        throw new HttpsError(
             "invalid-argument",
             "receiverId and message are required"
         );
@@ -150,13 +156,10 @@ exports.sendNotification = functions.https.onCall(async (data, context) => {
 
     try {
         // Get receiver's FCM tokens
-        const userDoc = await admin.firestore()
-            .collection("users")
-            .doc(receiverId)
-            .get();
+        const userDoc = await db.collection("users").doc(receiverId).get();
 
         if (!userDoc.exists) {
-            throw new functions.https.HttpsError("not-found", "User not found");
+            throw new HttpsError("not-found", "User not found");
         }
 
         const fcmTokens = userDoc.data().fcmToken;
@@ -181,15 +184,14 @@ exports.sendNotification = functions.https.onCall(async (data, context) => {
             tokens: fcmTokens,
         };
 
-        const response = await admin.messaging().sendEachForMulticast(fcmMessage);
-        return { 
-            success: true, 
+        const response = await messaging.sendEachForMulticast(fcmMessage);
+        return {
+            success: true,
             successCount: response.successCount,
-            failureCount: response.failureCount 
+            failureCount: response.failureCount
         };
     } catch (error) {
         console.error("Error:", error);
-        throw new functions.https.HttpsError("internal", error.message);
+        throw new HttpsError("internal", error.message);
     }
 });
-
