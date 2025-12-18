@@ -21,5 +21,20 @@ data class FcmResult(
     val messageId: String?,
     @SerializedName("error")
     val error: String?
-)
+) {
+    companion object {
+        // FCM error codes
+        const val ERROR_NOT_REGISTERED = "NotRegistered"
+        const val ERROR_INVALID_REGISTRATION = "InvalidRegistration"
+        const val ERROR_MISSING_REGISTRATION = "MissingRegistration"
+    }
+
+    fun isTokenInvalid(): Boolean {
+        return error in listOf(
+            ERROR_NOT_REGISTERED,
+            ERROR_INVALID_REGISTRATION,
+            ERROR_MISSING_REGISTRATION
+        )
+    }
+}
 

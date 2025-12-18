@@ -44,21 +44,44 @@ class NotificationRepositoryImpl @Inject constructor(
                             Timber.d("FCM notification sent successfully")
                             Result.success(body)
                         } else {
-                            val errorMessage = body.results?.firstOrNull()?.error
-                                ?: "Unknown FCM error"
-                            Timber.e("FCM notification failed: $errorMessage")
-                            Result.failure(FcmException(errorMessage))
+                            val fcmResult = body.results?.firstOrNull()
+                            val errorMessage = fcmResult?.error ?: "Unknown FCM error"
+
+                            // Check if token is invalid and should be removed
+                            if (fcmResult?.isTokenInvalid() == true) {
+                                Timber.w("FCM token is invalid/unregistered: $errorMessage. Token should be removed from database.")
+                                Result.failure(FcmTokenInvalidException(errorMessage))
+                            } else {
+                                Timber.e("FCM notification failed: $errorMessage")
+                                Result.failure(FcmException(errorMessage))
+                            }
                         }
                     } else {
                         Timber.e("FCM response body is null")
                         Result.failure(FcmException("Empty response from FCM"))
                     }
                 }
+                response.code() == 404 -> {
+                    val errorBody = response.errorBody()?.string() ?: "Not Found"
+                    Timber.e("FCM API 404 Error: $errorBody")
+                    Timber.e("This may indicate: 1) Invalid FCM token, or 2) Legacy FCM API has been deprecated")
+                    Timber.e("Consider migrating to FCM HTTP v1 API if the legacy API has been shut down")
+                    Result.failure(
+                        FcmException("FCM API 404: Token may be invalid or API deprecated. Details: $errorBody")
+                    )
+                }
+                response.code() == 401 -> {
+                    val errorBody = response.errorBody()?.string() ?: "Unauthorized"
+                    Timber.e("FCM API 401 Unauthorized: Invalid server key. Check PUSH_API_K in gradle.properties")
+                    Result.failure(
+                        FcmException("FCM authentication failed: Invalid server key")
+                    )
+                }
                 else -> {
                     val errorBody = response.errorBody()?.string() ?: "Unknown error"
                     Timber.e("FCM API error: ${response.code()} - $errorBody")
                     Result.failure(
-                        FcmException("FCM API error: ${response.code()}")
+                        FcmException("FCM API error: ${response.code()} - $errorBody")
                     )
                 }
             }
@@ -130,4 +153,9 @@ class NotificationRepositoryImpl @Inject constructor(
  * Custom exception for FCM-related errors.
  */
 class FcmException(message: String) : Exception(message)
+
+/**
+ * Exception indicating the FCM token is invalid and should be removed from database.
+ */
+class FcmTokenInvalidException(message: String) : Exception(message)
 

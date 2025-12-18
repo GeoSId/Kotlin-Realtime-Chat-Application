@@ -14,17 +14,12 @@ import com.lkps.ctApp.utils.Constant.REF_CHAT_FILES
 import com.lkps.ctApp.utils.Constant.REF_CHAT_RECORDS
 import com.lkps.ctApp.utils.Constant.REF_CHAT_ROOM
 import com.lkps.ctApp.utils.Constant.REF_CHAT_ROOMS
-import com.lkps.ctApp.utils.Constant.REF_FCM_TOKEN
 import com.lkps.ctApp.utils.Constant.REF_READ_TIME_STAMP
 import com.lkps.ctApp.utils.Constant.REF_TIME_STAMP
 import com.lkps.ctApp.utils.Constant.REF_USERS
 import com.lkps.ctApp.utils.DateUtils.Companion.getFormatTime
 import com.lkps.ctApp.utils.Utility.getTimeStamp
 import com.lkps.ctApp.utils.states.NetworkState
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import kotlin.properties.Delegates
@@ -38,10 +33,6 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
     private val dbRefUsers by lazy { firebaseFirestore.collection(REF_USERS) }
     private val sRefFiles by lazy { firebaseStorage.reference.child(REF_CHAT_FILES) }
     private val sRefRecords by lazy { firebaseStorage.reference.child(REF_CHAT_RECORDS) }
-
-    // Coroutine scope for background operations
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val notificationRepository by lazy { App.appComponent.notificationRepository() }
 
     private var chatRoomLr: ListenerRegistration? = null
 
@@ -211,9 +202,10 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
                 isNewSenderChatRoom?.let { if (it) addSenderChatRoom() }
                 isNewReceiverChatRoom?.let { if (it) addReceiverChatRoom() }
                 callBack?.invoke(NetworkState.LOADED)
-                sendPushWhenMessageSuccess(message = friendlyMessage)
+                // Push notifications are now handled automatically by Firebase Cloud Functions
+                // when a new message document is created in Firestore
+                Timber.d("Message sent successfully. Cloud Function will handle push notification.")
             }
-
             .addOnFailureListener {
                 callBack?.invoke(NetworkState.FAILED)
             }
@@ -269,38 +261,6 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
                     }
                 }.addOnFailureListener { callBack(NetworkState.FAILED) }
         }
-    }
-
-    private fun sendPushWhenMessageSuccess(message: Message) {
-        val receiverId = message.receiverId
-        if (receiverId.isNullOrEmpty()) {
-            Timber.w("Cannot send push notification: receiverId is null or empty")
-            return
-        }
-
-        dbRefUsers.document(receiverId).get()
-            .addOnSuccessListener { documentSnapshot ->
-                val tokenList = documentSnapshot.data?.get(REF_FCM_TOKEN) as? List<*>
-                val fcmToken = tokenList?.firstOrNull() as? String
-
-                if (fcmToken.isNullOrEmpty()) {
-                    Timber.w("Cannot send push notification: FCM token not found for user $receiverId")
-                    return@addOnSuccessListener
-                }
-
-                scope.launch {
-                    notificationRepository.sendRemoteNotification(fcmToken, message)
-                        .onSuccess {
-                            Timber.d("Push notification sent successfully to $receiverId")
-                        }
-                        .onFailure { error ->
-                            Timber.e(error, "Failed to send push notification to $receiverId")
-                        }
-                }
-            }
-            .addOnFailureListener { exception ->
-                Timber.e(exception, "Failed to fetch FCM token for user $receiverId")
-            }
     }
 
     override fun onActive() {
