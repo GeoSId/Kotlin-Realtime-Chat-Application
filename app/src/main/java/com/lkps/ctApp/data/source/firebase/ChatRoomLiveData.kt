@@ -4,14 +4,12 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.google.firebase.firestore.*
+import com.google.firebase.storage.FirebaseStorage
 import com.lkps.ctApp.App
 import com.lkps.ctApp.data.model.Chat
 import com.lkps.ctApp.data.model.Message
 import com.lkps.ctApp.data.model.User
-import com.lkps.ctApp.utils.states.NetworkState
-import com.google.firebase.storage.FirebaseStorage
 import com.lkps.ctApp.data.worker.DeleteMessagesManager.handleDeleteMessage
-import com.lkps.ctApp.notification.NotificationUtils
 import com.lkps.ctApp.utils.Constant.REF_CHAT_FILES
 import com.lkps.ctApp.utils.Constant.REF_CHAT_RECORDS
 import com.lkps.ctApp.utils.Constant.REF_CHAT_ROOM
@@ -22,6 +20,12 @@ import com.lkps.ctApp.utils.Constant.REF_TIME_STAMP
 import com.lkps.ctApp.utils.Constant.REF_USERS
 import com.lkps.ctApp.utils.DateUtils.Companion.getFormatTime
 import com.lkps.ctApp.utils.Utility.getTimeStamp
+import com.lkps.ctApp.utils.states.NetworkState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.io.File
 import kotlin.properties.Delegates
 
@@ -34,6 +38,10 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
     private val dbRefUsers by lazy { firebaseFirestore.collection(REF_USERS) }
     private val sRefFiles by lazy { firebaseStorage.reference.child(REF_CHAT_FILES) }
     private val sRefRecords by lazy { firebaseStorage.reference.child(REF_CHAT_RECORDS) }
+
+    // Coroutine scope for background operations
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val notificationRepository by lazy { App.appComponent.notificationRepository() }
 
     private var chatRoomLr: ListenerRegistration? = null
 
@@ -264,16 +272,34 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
     }
 
     private fun sendPushWhenMessageSuccess(message: Message) {
-        dbRefUsers.document(message.receiverId ?: "").get()
+        val receiverId = message.receiverId
+        if (receiverId.isNullOrEmpty()) {
+            Timber.w("Cannot send push notification: receiverId is null or empty")
+            return
+        }
+
+        dbRefUsers.document(receiverId).get()
             .addOnSuccessListener { documentSnapshot ->
-                val list = documentSnapshot.data?.get(REF_FCM_TOKEN)
-                if (list != null) {
-                    val test: List<String> = list as List<String>
-                    NotificationUtils.sendRemoteNotification(test[0], message)
+                val tokenList = documentSnapshot.data?.get(REF_FCM_TOKEN) as? List<*>
+                val fcmToken = tokenList?.firstOrNull() as? String
+
+                if (fcmToken.isNullOrEmpty()) {
+                    Timber.w("Cannot send push notification: FCM token not found for user $receiverId")
+                    return@addOnSuccessListener
+                }
+
+                scope.launch {
+                    notificationRepository.sendRemoteNotification(fcmToken, message)
+                        .onSuccess {
+                            Timber.d("Push notification sent successfully to $receiverId")
+                        }
+                        .onFailure { error ->
+                            Timber.e(error, "Failed to send push notification to $receiverId")
+                        }
                 }
             }
-            .addOnFailureListener {
-                Log.e("ChatRoomLiveData", "addOnFailureListener")
+            .addOnFailureListener { exception ->
+                Timber.e(exception, "Failed to fetch FCM token for user $receiverId")
             }
     }
 

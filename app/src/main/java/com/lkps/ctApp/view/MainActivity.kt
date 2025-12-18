@@ -196,17 +196,38 @@ class MainActivity : DaggerAppCompatActivity() {
     }
 
     private fun checkNotificationIntent() {
+        // Handle notification when app was in foreground (NOTIFICATION_INTENT extra)
         if (intent.hasExtra(NOTIFICATION_INTENT)) {
             val msg: Message = convertFromString(
                 intent.getStringExtra(NOTIFICATION_INTENT) ?: ""
             ) ?: return
-            val name = msg.name
-            if (name == null) {
-                firebaseVm.setFragmentState(FragmentState.START)
-            } else {
-                firebaseVm.setReceiverFromPush(msg.senderId, name)
-                firebaseVm.setFragmentState(FragmentState.CHAT)
-            }
+            navigateToChatFromNotification(msg.senderId, msg.name)
+            return
+        }
+
+        // Handle notification when app was in background (FCM data payload as extras)
+        handleFcmDataPayload()
+    }
+
+    /**
+     * Handles FCM data payload when app is opened from a background notification.
+     * FCM passes data fields directly as intent extras when app is in background.
+     */
+    private fun handleFcmDataPayload() {
+        val senderId = intent.getStringExtra("senderId")
+        val senderName = intent.getStringExtra("name")
+
+        if (!senderId.isNullOrEmpty() && !senderName.isNullOrEmpty()) {
+            navigateToChatFromNotification(senderId, senderName)
+        }
+    }
+
+    private fun navigateToChatFromNotification(senderId: String?, senderName: String?) {
+        if (senderName.isNullOrEmpty()) {
+            firebaseVm.setFragmentState(FragmentState.START)
+        } else {
+            firebaseVm.setReceiverFromPush(senderId, senderName)
+            firebaseVm.setFragmentState(FragmentState.CHAT)
         }
     }
 

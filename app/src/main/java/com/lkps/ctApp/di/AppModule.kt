@@ -1,6 +1,9 @@
 package com.lkps.ctApp.di
 
 import com.lkps.ctApp.controllers.device.DeviceController
+import com.lkps.ctApp.data.remote.FcmApiService
+import com.lkps.ctApp.data.repository.NotificationRepository
+import com.lkps.ctApp.data.repository.NotificationRepositoryImpl
 import com.lkps.ctApp.data.repository.Repository
 import com.lkps.ctApp.data.repository.RepositoryImpl
 import com.lkps.ctApp.data.source.firebase.FirebaseDaoImpl
@@ -22,6 +25,16 @@ object AppModule {
         ioDispatcher: CoroutineDispatcher
     ): Repository {
         return RepositoryImpl(firebaseDaoImpl)
+    }
+
+    @JvmStatic
+    @Singleton
+    @Provides
+    fun provideNotificationRepository(
+        fcmApiService: FcmApiService,
+        ioDispatcher: CoroutineDispatcher
+    ): NotificationRepository {
+        return NotificationRepositoryImpl(fcmApiService, ioDispatcher)
     }
 
     @JvmStatic

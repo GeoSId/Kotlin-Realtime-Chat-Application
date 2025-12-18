@@ -52,6 +52,11 @@
             android:name="com.lkps.ctApp.view.MainActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
+            <!-- Intent filter for FCM notification click when app is in background -->
+            <intent-filter>
+                <action android:name="OPEN_CHAT_ACTIVITY" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
