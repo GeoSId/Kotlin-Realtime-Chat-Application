@@ -145,29 +145,20 @@ In the Firebase Console, enable the following services:
 ##### 3.5 Cloud Messaging (FCM)
 1. Go to **Project Settings** (gear icon)
 2. Navigate to **Cloud Messaging** tab
-3. The **Server key** will be needed for push notifications
+3. FCM is automatically configured - push notifications are handled by Firebase Cloud Functions
 
-#### 4. Configure Push Notification API Key
+#### 4. Deploy Firebase Cloud Functions (Push Notifications)
 
-The app uses Firebase Cloud Messaging (FCM) to send push notifications. You need to obtain a **Server Key** (Legacy) or set up **Firebase Admin SDK**.
+Push notifications are handled server-side using Firebase Cloud Functions for enhanced security.
 
-##### Option A: Using Legacy Server Key (Deprecated but simpler)
-
-> ⚠️ **Note:** Legacy Server Keys are deprecated by Google. For production apps, consider using Firebase Admin SDK.
-
-1. Go to **Firebase Console → Project Settings → Cloud Messaging**
-2. Under **Cloud Messaging API (Legacy)**, if it shows "Disabled", click the three-dot menu and enable it
-3. Copy the **Server key**
-4. Open `gradle.properties` file in the project root
-5. Replace the placeholder with your key:
-
-```properties
-PUSH_API_KEY=YOUR_FCM_SERVER_KEY_HERE
+```bash
+cd firebase-functions
+npm install
+firebase login
+firebase deploy --only functions
 ```
 
-##### Option B: Using Firebase Admin SDK (Recommended for production)
-
-For production apps, you should migrate to [Firebase Admin SDK](https://firebase.google.com/docs/cloud-messaging/migrate-v1) and use OAuth 2.0 access tokens.
+See `firebase-functions/README.md` for detailed deployment instructions.
 
 #### 5. Configure Firestore Security Rules
 
@@ -234,9 +225,6 @@ service firebase.storage {
 ### gradle.properties
 
 ```properties
-# Required: Firebase Cloud Messaging Server Key
-PUSH_API_KEY=your_fcm_server_key_here
-
 # Android settings
 android.useAndroidX=true
 android.enableJetifier=true
@@ -262,8 +250,6 @@ The app uses Firebase Remote Config for dynamic settings:
 |---------|---------|---------|
 | Kotlin | 2.2.0 | Programming language |
 | Firebase BOM | 34.7.0 | Firebase services |
-| Retrofit | 3.0.0 | Networking |
-| OkHttp | 5.3.2 | HTTP client |
 | Glide | 5.0.5 | Image loading |
 | Dagger | 2.57.2 | Dependency injection |
 | Navigation | 2.9.6 | Navigation component |
@@ -352,9 +338,10 @@ firestore/
 - Ensure `google-services.json` is placed in the `app/` directory
 
 **2. Push notifications not working**
-- Verify `PUSH_API_KEY` is correctly set in `gradle.properties`
+- Ensure Firebase Cloud Functions are deployed (`firebase deploy --only functions`)
 - Check if Cloud Messaging is enabled in Firebase Console
 - Ensure the device has Google Play Services installed
+- Verify FCM token is being saved to the user's Firestore document
 
 **3. Authentication fails**
 - Verify Email/Password authentication is enabled in Firebase Console
