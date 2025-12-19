@@ -35,7 +35,7 @@ firebase init functions
 ```
 
 Select:
-- Use an existing project: `lkps-f4b90`
+- Use an existing project: `Your Project id`
 - Language: JavaScript
 - ESLint: No (optional)
 - Install dependencies: Yes
