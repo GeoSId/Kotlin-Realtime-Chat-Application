@@ -32,23 +32,18 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file("gradle.properties").newDataInputStream())
-
     buildTypes {
         debug {
             shrinkResources false
             minifyEnabled true
             signingConfig signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "PUSH_API_K", "\"${properties.getProperty("PUSH_API_KEY")}\""
         }
         release {
             shrinkResources false
             minifyEnabled true
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField "String", "PUSH_API_K", "\"${properties.getProperty("PUSH_API_KEY")}\""
         }
     }
 
@@ -125,12 +120,7 @@ dependencies {
     implementation libs.firebase.ui.auth
     implementation libs.guava
 
-    // Networking - Retrofit & OkHttp
-    implementation libs.retrofit
-    implementation libs.retrofit.adapter.rxjava2
-    implementation libs.retrofit.converter.gson
-    implementation libs.okhttp
-    implementation libs.okhttp.logging.interceptor
+    // JSON Serialization
     implementation libs.gson
 
     // Moshi

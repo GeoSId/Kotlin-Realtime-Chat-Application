@@ -30,7 +30,4 @@ object Constant {
     const val NOTIFICATION_INTENT = "user"
     const val NOTIFICATION_ID = 0x004
 
-    //Title  ------  FCM API ---------------------------------
-    const val FCM_BASE_URL = "https://fcm.googleapis.com/"
-    const val FCM_AUTHORIZATION_PREFIX = "key="
 }

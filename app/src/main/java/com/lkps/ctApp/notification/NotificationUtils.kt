@@ -20,8 +20,8 @@ import timber.log.Timber
 /**
  * Utility class for creating and displaying local notifications.
  *
- * This class handles only local notification display. For sending remote
- * push notifications, use [com.lkps.ctApp.data.repository.NotificationRepository].
+ * This class handles only local notification display. Remote push notifications
+ * are handled automatically by Firebase Cloud Functions.
  */
 object NotificationUtils {
 

@@ -1,0 +1,56 @@
+# IDE - Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Gradle
+.gradle/
+build/
+local.properties
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Signing
+*.jks
+*.keystore
+signconfigs.gradle
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Kotlin
+*.class
+
+# Test outputs
+/test-results/
+/coverage/
+
+# Crash reports
+crashlytics-build.properties
+
+# Firebase
+google-services.json
+
+
+
+
+
+
+
+/firebase-functions/
+
+
