@@ -6,4 +6,7 @@
     <dimen name="seekbar_track_background_height_material">4dp</dimen>
     <dimen name="seekbar_track_progress_height_material">5dp</dimen>
     <dimen name="progressBarCornerRadius">4dp</dimen>
+
+    <!-- FirebaseUI Sign In screen margins -->
+    <dimen name="firebase_ui_email_field_margin_top">32dp</dimen>
 </resources>

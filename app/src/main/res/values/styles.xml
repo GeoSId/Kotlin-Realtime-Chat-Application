@@ -46,6 +46,14 @@
         <item name="android:textColor">@color/colorAccent</item>
     </style>
 
+    <!-- Override FirebaseUI logo style to add bottom margin, creating space before email field -->
+    <style name="FirebaseUI.AuthMethodPicker.Logo">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_marginBottom">@dimen/firebase_ui_email_field_margin_top</item>
+    </style>
+
 
     <style name="AlertDialogStyle" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
         <item name="colorAccent">@color/colorWhite</item>

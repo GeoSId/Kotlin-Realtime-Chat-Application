@@ -74,26 +74,8 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
                 msg.setMessageId()
                 msg.isOwner = msg.senderId.equals(user?.userId.toString())
                 msgList.add(msg)
-                //TODO CHECK CASHE
-//                val isFromCash = documentSnapshot.metadata.isFromCache
-//                val isFromPendWrites = documentSnapshot.metadata.hasPendingWrites()
                 val isSameNameWithMessage = msg.name.equals(user?.username)
-                Log.e("ChatRoomLiveData","LISTENER>> "  +" / SIze: "+msgListSize)
-//                Log.e(
-//                    "TET",
-//                    "counter: " + counter + " / cashing: " + isFromCash + " / PendiWr: " + isFromPendWrites
-//                            + " / Owner: " + msg.isOwner + " / Senderid: " + msg.senderId
-//                            + " / isSameNameWithMessage: " + isSameNameWithMessage +
-//                            " / UserId: " + user?.userId + " / UserName: " + user?.username +
-//                            " / MessageName: " + msg.name + " / Message: " + msg.text+" / Time: " + msg.readTimestamp
-//                )
-
-//                if ((msg.readTimestamp == null) && (msg.isOwner == false) && (isFromCash)) {
-//                    updateChatRoomWithReadTime(documentSnapshot = documentSnapshot)
-//                }else if((msg.readTimestamp == null) && (msg.isOwner == false)
-//                    && (querySnapshot.documents.size == counter) && !isSameNameWithMessage){
-//                    updateChatRoomWithReadTime(documentSnapshot = documentSnapshot)
-//                }
+                //TODO CHECK CASHE
                 counter++
                 if(((msg.readTimestamp == null) && (msg.isOwner == false)
                     && (querySnapshot.documents.size == counter) && !isSameNameWithMessage)){
