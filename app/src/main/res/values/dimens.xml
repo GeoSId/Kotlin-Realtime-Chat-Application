@@ -8,5 +8,5 @@
     <dimen name="progressBarCornerRadius">4dp</dimen>
 
     <!-- FirebaseUI Sign In screen margins -->
-    <dimen name="firebase_ui_email_field_margin_top">32dp</dimen>
+    <dimen name="firebase_ui_email_field_margin_top">48dp</dimen>
 </resources>
