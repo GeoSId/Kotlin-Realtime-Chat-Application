@@ -1,5 +1,6 @@
 package com.lkps.ctApp.view.chatRoom
 
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.util.Log
@@ -33,6 +34,29 @@ class AudioHelper(
     private var timer: Timer? = null
     private var pauseTime: Int? = null
     var recorderDuration: Long? = null
+
+    private val audioManager = activity.getSystemService(AppCompatActivity.AUDIO_SERVICE) as AudioManager
+    private var isRecording = false
+
+    private val audioFocusChangeListener = AudioManager.OnAudioFocusChangeListener { focusChange ->
+        when (focusChange) {
+            AudioManager.AUDIOFOCUS_LOSS,
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                // Another app has requested audio focus, stop recording
+                if (isRecording) {
+                    stopRecording()
+                    Utility.makeText(activity, "Recording stopped - another app is using audio")
+                }
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                // We could lower volume here, but for recording it's better to stop
+                if (isRecording) {
+                    stopRecording()
+                    Utility.makeText(activity, "Recording stopped - audio interrupted")
+                }
+            }
+        }
+    }
 
     fun setupAudioHelper(view: View, message: Message) {
         if (playButton != view) {
@@ -117,21 +141,96 @@ class AudioHelper(
         timer?.cancel(); timer = null
     }
 
-    fun startRecording() {
-        recorder = MediaRecorder().apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-            setOutputFile(getRecordFilePath())
-            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-            try {
-                prepare(); start()
-                recorderDuration = System.currentTimeMillis()
-            } catch (e: IOException) {
-                Log.e(ChatFragment.TAG, "prepare() failed")
-            } catch (e: IllegalStateException) {
-                Log.e(ChatFragment.TAG, "prepare() failed")
-                Utility.makeText(activity, R.string.record_failed)
+    fun startRecording(): Boolean {
+        val filePath = getRecordFilePath()
+        if (filePath == null) {
+            Log.e("AudioHelper", "Failed to get recording file path")
+            Utility.makeText(activity, "Failed to create audio file")
+            return false
+        }
+
+        Log.d("AudioHelper", "Recording file path: $filePath")
+
+        // Check if we can write to the directory
+        try {
+            val testFile = java.io.File(filePath)
+            val parentDir = testFile.parentFile
+
+            if (parentDir == null || !parentDir.exists()) {
+                Log.e("AudioHelper", "Parent directory doesn't exist: ${parentDir?.absolutePath}")
+                Utility.makeText(activity, "Storage directory not available")
+                return false
             }
+
+            if (!parentDir.canWrite()) {
+                Log.e("AudioHelper", "Cannot write to directory: ${parentDir.absolutePath}")
+                Utility.makeText(activity, "Cannot write to storage")
+                return false
+            }
+
+            // Try to create the file to ensure we can actually write to it
+            if (!testFile.createNewFile() && !testFile.exists()) {
+                Log.e("AudioHelper", "Cannot create audio file: $filePath")
+                Utility.makeText(activity, "Cannot create audio file")
+                return false
+            }
+
+        } catch (e: Exception) {
+            Log.e("AudioHelper", "Error with file operations", e)
+            Utility.makeText(activity, "File system error: ${e.message}")
+            return false
+        }
+
+        // Request audio focus before recording
+        val focusResult = audioManager.requestAudioFocus(
+            audioFocusChangeListener,
+            AudioManager.STREAM_MUSIC,
+            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT
+        )
+
+        Log.d("AudioHelper", "Audio focus request result: $focusResult")
+
+        if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            Log.e("AudioHelper", "Audio focus not granted - microphone may be in use")
+            Utility.makeText(activity, "Microphone is busy. Please close other audio apps and try again.")
+            return false
+        }
+
+        return try {
+            // Clean up any existing recorder first
+            recorder?.apply {
+                try { stop() } catch (e: Exception) { }
+                try { release() } catch (e: Exception) { }
+            }
+            recorder = null
+
+            recorder = MediaRecorder().apply {
+                setAudioSource(MediaRecorder.AudioSource.MIC)
+                setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+                setOutputFile(filePath)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+                prepare()
+                start()
+            }
+
+            recorderDuration = System.currentTimeMillis()
+            isRecording = true
+            true
+        } catch (e: IOException) {
+            Log.e(ChatFragment.TAG, "MediaRecorder prepare failed", e)
+            Utility.makeText(activity, "Failed to prepare recording: ${e.message}")
+            abandonAudioFocus()
+            false
+        } catch (e: IllegalStateException) {
+            Log.e(ChatFragment.TAG, "MediaRecorder start failed", e)
+            Utility.makeText(activity, "Microphone unavailable. Please close other audio apps.")
+            abandonAudioFocus()
+            false
+        } catch (e: RuntimeException) {
+            Log.e(ChatFragment.TAG, "MediaRecorder initialization failed", e)
+            Utility.makeText(activity, "Audio recording not supported: ${e.message}")
+            abandonAudioFocus()
+            false
         }
     }
 
@@ -147,10 +246,17 @@ class AudioHelper(
         } catch (stopException: RuntimeException) {
             Log.e(ChatFragment.TAG, "stop() failed")
         }
+        isRecording = false
+        abandonAudioFocus()
+    }
+
+    private fun abandonAudioFocus() {
+        audioManager.abandonAudioFocus(audioFocusChangeListener)
     }
 
     fun onStop() {
         stopPlaying()
         stopRecording()
+        abandonAudioFocus()
     }
 }

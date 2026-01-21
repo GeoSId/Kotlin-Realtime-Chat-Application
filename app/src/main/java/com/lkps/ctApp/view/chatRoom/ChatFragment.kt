@@ -305,8 +305,11 @@ open class ChatFragment : CustomDaggerFragment() {
             PermissionType.MICROPHONE -> {
                 if (isGranted) {
                     // Microphone permission granted, start recording
-                    audioHelper.startRecording()
-                    showWave(true)
+                    if (audioHelper.startRecording()) {
+                        showWave(true)
+                    } else {
+                        // Recording failed, don't show wave
+                    }
                 } else {
                     showPermissionDeniedMessage("Microphone permission is required to record audio")
                 }
@@ -383,8 +386,9 @@ open class ChatFragment : CustomDaggerFragment() {
                     fragment = this,
                     permissionLauncher = requestPermissionLauncher,
                     onGranted = {
-                        audioHelper.startRecording()
-                        showWave(true)
+                        if (audioHelper.startRecording()) {
+                            showWave(true)
+                        }
                     },
                     onDenied = {
                         showPermissionDeniedMessage("Microphone permission is required to record audio")

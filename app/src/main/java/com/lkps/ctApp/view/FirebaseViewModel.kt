@@ -177,7 +177,27 @@ class FirebaseViewModel @Inject constructor(
     }
 
     fun pushMsg(msg: String) {
-        _msgList.pushMsg(msg)
+        _msgList.pushMsg(msg) { status, message ->
+            // If message sent successfully and we have the message, add it to the local list
+            if (status == NetworkState.LOADED && message != null) {
+                val currentMessages = _msgList.value.orEmpty().toMutableList()
+                // Check if message is not already in the list (avoid duplicates)
+                val isDuplicate = currentMessages.any { existing ->
+                    existing.senderId == message.senderId &&
+                    existing.text == message.text &&
+                    existing.timestamp == message.timestamp
+                }
+
+                if (!isDuplicate) {
+                    // Set the message properties that are determined at runtime
+                    message.isOwner = message.senderId == _msgList.user?.userId
+                    message.setMessageId()
+
+                    currentMessages.add(message)
+                    _msgList.value = currentMessages
+                }
+            }
+        }
     }
 
     fun pushFile(fileUri: Uri?, fileExtension: String) {

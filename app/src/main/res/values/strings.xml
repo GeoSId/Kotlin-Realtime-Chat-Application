@@ -19,7 +19,7 @@
     <string name="no_results">No results</string>
     <string name="change_a_bit_your_query">Change a bit your query</string>
     <string name="type_a_message">Type a message</string>
-    <string name="record_failed">You can\'t record a voice message while you\'re recording in another app</string>
+    <string name="record_failed">Cannot record voice message. Audio focus unavailable or microphone in use.</string>
     <string name="clear_chat">Clear Chat</string>
 
     <string name="delete_users">DELETE USERS</string>

@@ -73,6 +73,7 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
             val msgListSize = querySnapshot.documents.size
             if(msgListSize == 0){
                 value = mutableListOf()
+                return
             }
             for (documentSnapshot in querySnapshot.documents) {
                 val msg = documentSnapshot.toObject(Message::class.java) ?: continue
@@ -87,8 +88,8 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
                     updateChatRoomWithReadTime(documentSnapshot = documentSnapshot)
                     clearChat(msg)
                 }
-                value = msgList
             }
+            value = msgList
         }
     }
 
@@ -164,10 +165,10 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
         audioDuration: Long? = null,
         fileExtension: String? = null,
         fileName: String? = null,
-        callBack: ((usernameStatus: NetworkState) -> Unit)? = null
+        callBack: ((usernameStatus: NetworkState, message: Message?) -> Unit)? = null
     ) {
         val chatRoomId = chatRoomId ?: run {
-            callBack?.invoke(NetworkState.FAILED)
+            callBack?.invoke(NetworkState.FAILED, null)
             return@pushMsg
         }
         val friendlyMessage = Message(
@@ -188,13 +189,13 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
             .addOnSuccessListener {
                 isNewSenderChatRoom?.let { if (it) addSenderChatRoom() }
                 isNewReceiverChatRoom?.let { if (it) addReceiverChatRoom() }
-                callBack?.invoke(NetworkState.LOADED)
+                callBack?.invoke(NetworkState.LOADED, friendlyMessage)
                 // Push notifications are now handled automatically by Firebase Cloud Functions
                 // when a new message document is created in Firestore
                 Timber.d("Message sent successfully. Cloud Function will handle push notification.")
             }
             .addOnFailureListener {
-                callBack?.invoke(NetworkState.FAILED)
+                callBack?.invoke(NetworkState.FAILED, null)
             }
     }
 
@@ -217,7 +218,7 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
                         audioDuration = audioDuration,
                         fileExtension = lastPathSegment.substring(lastPathSegment.lastIndexOf(".") + 1),
                         fileName = fileNameTimeStamp
-                    ) { callBack(it) }
+                    ) { status, message -> callBack(status) }
                 }.addOnFailureListener {
                     callBack(NetworkState.FAILED)
                 }
@@ -227,9 +228,10 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
     fun pushFile(
         fileUri: Uri?,
         fileExtension: String,
-        callBack: (usernameStatus: NetworkState, message: Message?) -> Unit
+        message: String? = null,
+        callBack: (usernameStatus: NetworkState, sentMessage: Message?) -> Unit
     ) {
-        callBack(NetworkState.LOADING)
+        callBack(NetworkState.LOADING, null)
         val fileNameTimeStamp = getTimeStamp().toString()
 
         if (fileUri != null && fileUri.toString().isNotEmpty()) {
@@ -252,14 +254,27 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
                     .addOnSuccessListener { taskSnapshot ->
                         val urlTask = taskSnapshot.storage.downloadUrl
                         urlTask.addOnSuccessListener { uri ->
+                            // Create the message object first so we can return it in the callback
+                            val fileMessage = Message(
+                                senderId = user?.userId,
+                                receiverId = receiverId,
+                                name = user?.username,
+                                fileUrl = uri.toString(),
+                                fileExtension = fileExtension,
+                                fileName = fileNameTimeStamp,
+                                text = message,
+                                timestamp = FieldValue.serverTimestamp()
+                            )
+
                             pushMsg(
+                                msg = message,
                                 fileUrl = uri.toString(),
                                 fileExtension = fileExtension,
                                 fileName = fileNameTimeStamp
                             )
-                            { status ->
+                            { status, sentMessage ->
                                 if (status == NetworkState.LOADED) {
-                                    callBack(NetworkState.LOADED, message)
+                                    callBack(NetworkState.LOADED, fileMessage)
                                 } else {
                                     callBack(status, null)
                                 }
