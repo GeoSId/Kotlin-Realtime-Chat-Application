@@ -23,6 +23,7 @@ import com.lkps.ctApp.utils.states.NetworkState
 import timber.log.Timber
 import java.io.File
 import kotlin.properties.Delegates
+import com.lkps.ctApp.utils.FileHelper
 
 class ChatRoomLiveData : MutableLiveData<List<Message>>() {
 
@@ -51,7 +52,9 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
 
             chatRoomLr?.remove()
             chatRoomLr = null
-            chatRoomLr = chatRoomId?.let { getChatRoomRef(it).addSnapshotListener(snapshotListener) }
+            chatRoomLr = chatRoomId?.let {
+                getChatRoomRef(it).addSnapshotListener(snapshotListener)
+            }
         }
     }
 
@@ -61,7 +64,9 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
             firebaseFirestoreException: FirebaseFirestoreException?
         ) {
             querySnapshot ?: return
-            firebaseFirestoreException?.let { return@onEvent }
+            firebaseFirestoreException?.let {
+                return@onEvent
+            }
 
             val msgList = mutableListOf<Message>()
             counter = 0
@@ -222,26 +227,54 @@ class ChatRoomLiveData : MutableLiveData<List<Message>>() {
     fun pushFile(
         fileUri: Uri?,
         fileExtension: String,
-        callBack: (usernameStatus: NetworkState) -> Unit
+        callBack: (usernameStatus: NetworkState, message: Message?) -> Unit
     ) {
         callBack(NetworkState.LOADING)
         val fileNameTimeStamp = getTimeStamp().toString()
-        val lastPathSegment = fileUri?.lastPathSegment ?: ""
+
         if (fileUri != null && fileUri.toString().isNotEmpty()) {
-            sRefFiles.child(fileNameTimeStamp).putFile(fileUri)
-                .addOnSuccessListener { taskSnapshot ->
-                    val urlTask = taskSnapshot.storage.downloadUrl
-                    urlTask.addOnSuccessListener { uri ->
-                        pushMsg(
-                            fileUrl = uri.toString(),
-                            fileExtension = fileExtension,
-                            fileName = fileNameTimeStamp
-                        )
-                        { callBack(it) }
-                    }.addOnFailureListener {
-                        callBack(NetworkState.FAILED)
+            try {
+                val uploadTask = if (fileUri.scheme == "content" && fileUri.authority == FileHelper.AUTHORITY) {
+                    // This is a FileProvider URI from camera, convert to file URI for Firebase
+                    val file = File(FileHelper.currentPhotoPath)
+                    if (file.exists()) {
+                        sRefFiles.child(fileNameTimeStamp).putFile(Uri.fromFile(file))
+                    } else {
+                        callBack(NetworkState.FAILED, null)
+                        return
                     }
-                }.addOnFailureListener { callBack(NetworkState.FAILED) }
+                } else {
+                    // Regular URI (from gallery)
+                    sRefFiles.child(fileNameTimeStamp).putFile(fileUri)
+                }
+
+                uploadTask
+                    .addOnSuccessListener { taskSnapshot ->
+                        val urlTask = taskSnapshot.storage.downloadUrl
+                        urlTask.addOnSuccessListener { uri ->
+                            pushMsg(
+                                fileUrl = uri.toString(),
+                                fileExtension = fileExtension,
+                                fileName = fileNameTimeStamp
+                            )
+                            { status ->
+                                if (status == NetworkState.LOADED) {
+                                    callBack(NetworkState.LOADED, message)
+                                } else {
+                                    callBack(status, null)
+                                }
+                            }
+                        }.addOnFailureListener {
+                            callBack(NetworkState.FAILED, null)
+                        }
+                    }.addOnFailureListener { exception ->
+                        callBack(NetworkState.FAILED, null)
+                    }
+            } catch (e: Exception) {
+                callBack(NetworkState.FAILED, null)
+            }
+        } else {
+            callBack(NetworkState.FAILED, null)
         }
     }
 

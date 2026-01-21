@@ -3,6 +3,7 @@ package com.lkps.ctApp.data.source.firebase
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.map
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -104,7 +105,8 @@ class FirebaseDaoImpl {
     }
 
     private fun addUser(user: User, callBack: (usernameStatus: NetworkState) -> Unit) {
-        val userId = userLiveData.value?.first?.userId ?: run {
+        // Get the current authenticated user ID from FirebaseAuth
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: run {
             callBack(NetworkState.FAILED)
             return
         }

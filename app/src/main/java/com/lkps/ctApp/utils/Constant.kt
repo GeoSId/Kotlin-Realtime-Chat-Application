@@ -30,4 +30,13 @@ object Constant {
     const val NOTIFICATION_INTENT = "user"
     const val NOTIFICATION_ID = 0x004
 
+    //Title  ------  Permissions ---------------------------------
+    const val PERMISSION_CAMERA = android.Manifest.permission.CAMERA
+    const val PERMISSION_RECORD_AUDIO = android.Manifest.permission.RECORD_AUDIO
+    const val PERMISSION_READ_EXTERNAL_STORAGE = android.Manifest.permission.READ_EXTERNAL_STORAGE
+    const val PERMISSION_READ_MEDIA_IMAGES = android.Manifest.permission.READ_MEDIA_IMAGES
+    const val PERMISSION_READ_MEDIA_VIDEO = android.Manifest.permission.READ_MEDIA_VIDEO
+    const val PERMISSION_READ_MEDIA_AUDIO = android.Manifest.permission.READ_MEDIA_AUDIO
+    const val PERMISSION_READ_MEDIA_VISUAL_USER_SELECTED = android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+
 }

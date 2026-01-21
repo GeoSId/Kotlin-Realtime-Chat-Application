@@ -2,10 +2,10 @@ package com.lkps.ctApp.view
 
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,10 +31,6 @@ import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
 class MainActivity : DaggerAppCompatActivity() {
-
-    companion object {
-        private const val TAG = "MainActivity"
-    }
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
@@ -113,10 +109,8 @@ class MainActivity : DaggerAppCompatActivity() {
     private fun checkGooglePlayServices(): Boolean {
         val status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
         return if (status != ConnectionResult.SUCCESS) {
-            Log.e(TAG, "Google Play Services error")
             false
         } else {
-            Log.i(TAG, "Google Play Services updated")
             true
         }
     }
@@ -126,9 +120,7 @@ class MainActivity : DaggerAppCompatActivity() {
             when (userWithState.second) {
                 is AuthenticationState.Authenticated -> onAuthenticated()
                 is AuthenticationState.Unauthenticated -> onUnauthenticated()
-                is AuthenticationState.InvalidAuthentication -> {
-                    Log.e(TAG, "Invalid authentication state")
-                }
+                is AuthenticationState.InvalidAuthentication -> {}
             }
         }
     }
@@ -239,17 +231,52 @@ class MainActivity : DaggerAppCompatActivity() {
     }
 
     private fun handlePhotoPickerResult(result: ActivityResult) {
-        if (result.resultCode == RESULT_OK) {
+        // Handle both RESULT_OK and other success codes (some camera apps use different codes)
+        if (result.resultCode == RESULT_OK || result.resultCode == android.app.Activity.RESULT_FIRST_USER) {
             val data = result.data
             val uri: Uri
             val fileExtension: String
 
             if (data != null) {
+                // Gallery selection
                 uri = data.data ?: Uri.EMPTY
-                fileExtension = getTypeFromUri(data)
+                fileExtension = getTypeFromUri(this, uri)
             } else {
-                uri = galleryAddPic(this) ?: Uri.EMPTY
-                fileExtension = getFileExtensionFromUri(uri)
+                // Camera capture - check if camera saved to our file
+                var cameraUri: Uri? = null
+                var cameraFileExtension = "jpg"
+
+                // Check if camera saved to our specified file
+                val photoFile = java.io.File(com.lkps.ctApp.utils.FileHelper.Companion.currentPhotoPath)
+
+                if (photoFile.exists() && photoFile.length() > 0) {
+                    // Camera saved to our file
+                    cameraUri = galleryAddPic(this)
+                    cameraFileExtension = getFileExtensionFromUri(cameraUri ?: Uri.EMPTY)
+                } else {
+                    // Check if camera returned thumbnail data
+                    val thumbnailBitmap = result.data?.getParcelableExtra<android.graphics.Bitmap>("data")
+                    if (thumbnailBitmap != null) {
+                        Toast.makeText(this,
+                            getString(R.string.please_use_the_full_camera_app_for_photos), android.widget.Toast.LENGTH_SHORT).show()
+                        return
+                    } else {
+                        Toast.makeText(this,
+                            getString(R.string.failed_to_capture_photo_please_try_again), android.widget.Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                }
+
+                uri = cameraUri ?: Uri.EMPTY
+                fileExtension = cameraFileExtension
+
+                if (uri == Uri.EMPTY) {
+                    Toast.makeText(this,
+                        getString(R.string.failed_to_capture_photo), android.widget.Toast.LENGTH_SHORT).show()
+                    return
+                }
+                Toast.makeText(this,
+                    getString(R.string.photo_captured_successfully_uploading), android.widget.Toast.LENGTH_SHORT).show()
             }
             firebaseVm.pushFile(uri, fileExtension)
         }

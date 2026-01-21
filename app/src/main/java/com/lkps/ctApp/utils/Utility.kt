@@ -32,6 +32,10 @@ object Utility {
         if (takePictureIntent.resolveActivity(context.packageManager) == null) return null
         val imageUri: Uri = FileProvider.getUriForFile(context, FileHelper.AUTHORITY, photoFile)
         takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri)
+
+        // Add flags to ensure camera activity finishes and returns properly
+        takePictureIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+
         return takePictureIntent
     }
 

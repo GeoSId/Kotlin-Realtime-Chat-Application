@@ -49,5 +49,9 @@
     <string name="grant_permissions">Grant</string>
     <string name="open_settings">Open Settings</string>
     <string name="exit_app">Exit</string>
+    <string name="please_use_the_full_camera_app_for_photos">Please use the full camera app for photos</string>
+    <string name="failed_to_capture_photo_please_try_again">Failed to capture photo - please try again</string>
+    <string name="failed_to_capture_photo">Failed to capture photo</string>
+    <string name="photo_captured_successfully_uploading">Photo captured successfully. Uploading...</string>
 
 </resources>

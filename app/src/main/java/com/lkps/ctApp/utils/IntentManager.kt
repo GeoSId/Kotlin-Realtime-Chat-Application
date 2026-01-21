@@ -6,6 +6,7 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Parcelable
 import android.webkit.MimeTypeMap
+import androidx.core.content.FileProvider
 import java.io.File
 
 object IntentManager {
@@ -46,24 +47,52 @@ object IntentManager {
         return ""
     }
 
-    fun getTypeFromUri(intent: Intent):String{
-        if(intent.data != null && intent.data.toString().contains("images")){
-            return "jpg"
-        }else{
-            return ""
+    fun getTypeFromUri(context: Context, uri: Uri): String {
+        if (uri.scheme == "content") {
+            // For content URIs, try to get MIME type
+            val mimeType = context.contentResolver.getType(uri)
+            if (mimeType != null) {
+                return when (mimeType) {
+                    "image/jpeg" -> "jpg"
+                    "image/png" -> "png"
+                    "image/gif" -> "gif"
+                    "image/webp" -> "webp"
+                    else -> {
+                        // Fallback to extension extraction from MIME type
+                        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+                        extension ?: "jpg"
+                    }
+                }
+            }
         }
+
+        // Fallback to URI parsing
+        return getFileExtensionFromUri(uri)
     }
 
      fun galleryAddPic(context: Context): Uri? {
         val photoFile = File(FileHelper.currentPhotoPath)
+        if (!photoFile.exists()) {
+            return null
+        }
+
         val mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(photoFile.extension)
+
         MediaScannerConnection.scanFile(
                 context,
                 arrayOf(photoFile.absolutePath),
                 arrayOf(mimeType),
                 null
         )
-        return Uri.fromFile(photoFile)
+
+        // Return FileProvider URI instead of file:// URI for security
+        val fileProviderUri = FileProvider.getUriForFile(
+            context,
+            FileHelper.AUTHORITY,
+            photoFile
+        )
+
+        return fileProviderUri
     }
 
     fun getFileExtensionFromUri(uri: Uri):String{
